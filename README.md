@@ -1,3 +1,3 @@
 # randevu-link
 
-iOS client for Randevu Link — seans paketleri, kasa ve ayarlar.
+iOS client for Randevu Link — notlar ve ayarlar.

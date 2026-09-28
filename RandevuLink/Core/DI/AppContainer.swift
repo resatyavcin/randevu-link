@@ -10,18 +10,8 @@ struct AppContainer {
     }
 
     @MainActor
-    func makeSessionsListViewModel() -> SessionsListViewModel {
-        let dataSource = SessionPackageMockDataSource()
-        let repository = SessionPackageRepositoryImpl(dataSource: dataSource)
-        let useCase = GetSessionPackagesUseCase(repository: repository)
-        return SessionsListViewModel(getPackages: useCase)
-    }
-
-    @MainActor
-    func makeRegisterViewModel() -> RegisterViewModel {
-        let dataSource = RegisterMockDataSource()
-        let repository = RegisterRepositoryImpl(dataSource: dataSource)
-        let useCase = GetRegisterSnapshotUseCase(repository: repository)
-        return RegisterViewModel(getSnapshot: useCase)
+    func makeNotesListViewModel() -> NotesListViewModel {
+        let repository = NotesRepository(container: NotesStore.shared)
+        return NotesListViewModel(repository: repository)
     }
 }

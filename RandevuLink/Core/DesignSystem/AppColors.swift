@@ -1,47 +1,60 @@
 import SwiftUI
-import UIKit
 
-enum AppColors {
-    static let background = dynamic(light: .white, dark: UIColor(white: 0.07, alpha: 1))
-    static let cardBackground = dynamic(
-        light: UIColor(red: 0.965, green: 0.965, blue: 0.97, alpha: 1),
-        dark: UIColor(white: 0.16, alpha: 1)
-    )
-    static let textPrimary = dynamic(
-        light: UIColor(red: 0.11, green: 0.11, blue: 0.12, alpha: 1),
-        dark: UIColor(white: 0.95, alpha: 1)
-    )
-    static let textSecondary = dynamic(
-        light: UIColor(red: 0.55, green: 0.55, blue: 0.58, alpha: 1),
-        dark: UIColor(white: 0.64, alpha: 1)
-    )
-    static let badge = dynamic(
-        light: UIColor(red: 0.22, green: 0.22, blue: 0.24, alpha: 1),
-        dark: UIColor(white: 0.90, alpha: 1)
-    )
-    static let badgeText = dynamic(light: .white, dark: UIColor(white: 0.08, alpha: 1))
-    static let accent = dynamic(
-        light: UIColor(red: 0.08, green: 0.08, blue: 0.09, alpha: 1),
-        dark: UIColor(white: 0.95, alpha: 1)
-    )
-    static let controlBackground = dynamic(
-        light: UIColor(red: 0.93, green: 0.93, blue: 0.94, alpha: 1),
-        dark: UIColor(white: 0.18, alpha: 1)
-    )
-    static let controlSelected = dynamic(light: .white, dark: UIColor(white: 0.28, alpha: 1))
-    static let icon = dynamic(
-        light: UIColor(red: 0.25, green: 0.25, blue: 0.27, alpha: 1),
-        dark: UIColor(white: 0.90, alpha: 1)
-    )
-    /// Positive money / credit tone for register totals.
-    static let positive = dynamic(
-        light: UIColor(red: 0.15, green: 0.52, blue: 0.32, alpha: 1),
-        dark: UIColor(red: 0.45, green: 0.82, blue: 0.58, alpha: 1)
+struct AppColors: Equatable {
+    let background: Color
+    let cardBackground: Color
+    let textPrimary: Color
+    let textSecondary: Color
+    let badge: Color
+    let badgeText: Color
+    let accent: Color
+    let controlBackground: Color
+    let controlSelected: Color
+    let icon: Color
+    let selection: Color
+    let destructive: Color
+    let positive: Color
+
+    static let light = AppColors(
+        background: .white,
+        cardBackground: Color(red: 0.965, green: 0.965, blue: 0.97),
+        textPrimary: Color(red: 0.11, green: 0.11, blue: 0.12),
+        textSecondary: Color(red: 0.55, green: 0.55, blue: 0.58),
+        badge: Color(red: 0.22, green: 0.22, blue: 0.24),
+        badgeText: .white,
+        accent: Color(red: 0.08, green: 0.08, blue: 0.09),
+        controlBackground: Color(red: 0.93, green: 0.93, blue: 0.94),
+        controlSelected: .white,
+        icon: Color(red: 0.25, green: 0.25, blue: 0.27),
+        selection: Color(red: 0.31, green: 0.27, blue: 0.90),
+        destructive: Color(red: 0.84, green: 0.16, blue: 0.16),
+        positive: Color(red: 0.15, green: 0.52, blue: 0.32)
     )
 
-    private static func dynamic(light: UIColor, dark: UIColor) -> Color {
-        Color(uiColor: UIColor { traits in
-            traits.userInterfaceStyle == .dark ? dark : light
-        })
+    static let dark = AppColors(
+        background: Color(white: 0.07),
+        cardBackground: Color(white: 0.16),
+        textPrimary: Color(white: 0.95),
+        textSecondary: Color(white: 0.64),
+        badge: Color(white: 0.90),
+        badgeText: Color(white: 0.08),
+        accent: Color(white: 0.95),
+        controlBackground: Color(white: 0.18),
+        controlSelected: Color(white: 0.28),
+        icon: Color(white: 0.90),
+        selection: Color(red: 0.45, green: 0.42, blue: 0.98),
+        destructive: Color(red: 0.93, green: 0.32, blue: 0.30),
+        positive: Color(red: 0.45, green: 0.82, blue: 0.58)
+    )
+}
+
+private struct AppColorsKey: EnvironmentKey {
+    static let defaultValue = AppColors.light
+}
+
+extension EnvironmentValues {
+    var appColors: AppColors {
+        get { self[AppColorsKey.self] }
+        set { self[AppColorsKey.self] = newValue }
     }
 }

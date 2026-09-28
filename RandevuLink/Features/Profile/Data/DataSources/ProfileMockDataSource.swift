@@ -3,8 +3,8 @@ import Foundation
 struct ProfileMockDataSource: Sendable {
     func load() -> UserProfile {
         UserProfile(
-            greeting: "Günaydın, Reşat",
-            subtitle: "Nothing urgent today, you’re in a good place.",
+            greeting: "Reşat",
+            subtitle: "",
             sections: [
                 ProfileSection(
                     id: "today",

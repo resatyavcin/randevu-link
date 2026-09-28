@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import WidgetKit
 
 @MainActor
 final class LocalizationManager: ObservableObject {
@@ -9,6 +10,10 @@ final class LocalizationManager: ObservableObject {
         didSet {
             guard oldValue != language else { return }
             UserDefaults.standard.set(language.rawValue, forKey: Self.storageKey)
+            var snapshot = WidgetSnapshotStore.load()
+            snapshot.language = language.rawValue
+            WidgetSnapshotStore.save(snapshot)
+            WidgetCenter.shared.reloadTimelines(ofKind: WidgetSnapshotStore.kind)
         }
     }
 

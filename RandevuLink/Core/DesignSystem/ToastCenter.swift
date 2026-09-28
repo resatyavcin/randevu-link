@@ -29,6 +29,27 @@ final class ToastCenter: ObservableObject {
         }
     }
 
+    func showPinned(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        dismissTask?.cancel()
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.86)) {
+            message = trimmed
+        }
+    }
+
+    func updatePinned(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        dismissTask?.cancel()
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.86)) {
+            message = trimmed
+        }
+    }
+
     func dismiss() {
         dismissTask?.cancel()
         withAnimation(.spring(response: 0.34, dampingFraction: 0.9)) {
@@ -38,27 +59,34 @@ final class ToastCenter: ObservableObject {
 }
 
 struct ToastHost: View {
+    @Environment(\.appColors) private var appColors
     @ObservedObject var toast: ToastCenter
 
     var body: some View {
-        ZStack {
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+                .allowsHitTesting(false)
+
             if let message = toast.message {
                 Text(message)
                     .font(AppTypography.section)
-                    .foregroundStyle(AppColors.background)
+                    .foregroundStyle(appColors.background)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(AppColors.accent)
-                    .clipShape(Capsule())
-                    .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+                    .padding(.vertical, 12)
+                    .background(appColors.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .padding(.horizontal, AppSpacing.screenHorizontal)
+                    .padding(.bottom, AppSpacing.bottomBarInset + 8)
+                    .allowsHitTesting(false)
                     .transition(
                         .asymmetric(
                             insertion: .move(edge: .bottom).combined(with: .opacity),
                             removal: .move(edge: .bottom).combined(with: .opacity)
                         )
                     )
-                    .padding(.bottom, AppSpacing.bottomBarInset + 8)
-                    .allowsHitTesting(false)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AppearanceSectionView: View {
+    @Environment(\.appColors) private var appColors
     @EnvironmentObject private var l10n: LocalizationManager
     @Binding var isDarkMode: Bool
 
@@ -16,7 +17,7 @@ struct AppearanceSectionView: View {
                 HStack(spacing: 12) {
                     Text(l10n(.darkMode))
                         .font(AppTypography.rowTitle)
-                        .foregroundStyle(AppColors.textPrimary)
+                        .foregroundStyle(appColors.textPrimary)
 
                     Spacer(minLength: 0)
 
@@ -24,7 +25,7 @@ struct AppearanceSectionView: View {
                 }
                 .padding(.horizontal, AppSpacing.rowHorizontal)
                 .padding(.vertical, 10)
-                .background(AppColors.cardBackground)
+                .background(appColors.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: AppSpacing.cardRadius, style: .continuous))
                 .contentShape(RoundedRectangle(cornerRadius: AppSpacing.cardRadius, style: .continuous))
             }

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SectionHeaderView: View {
+    @Environment(\.appColors) private var appColors
     let title: String
     let count: Int
     var showsBadge: Bool = false
@@ -9,15 +10,15 @@ struct SectionHeaderView: View {
         HStack(spacing: 8) {
             Text(title)
                 .font(AppTypography.section)
-                .foregroundStyle(AppColors.textSecondary)
+                .foregroundStyle(appColors.textSecondary)
 
             if showsBadge {
                 Text("\(count)")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(AppColors.badgeText)
+                    .foregroundStyle(appColors.badgeText)
                     .frame(minWidth: 26, minHeight: 26)
                     .padding(.horizontal, 6)
-                    .background(AppColors.badge)
+                    .background(appColors.badge)
                     .clipShape(Capsule())
             }
 

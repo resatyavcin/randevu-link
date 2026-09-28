@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AppSwitch: View {
+    @Environment(\.appColors) private var appColors
     @Environment(\.colorScheme) private var colorScheme
     @Binding var isOn: Bool
 
@@ -30,7 +31,7 @@ struct AppSwitch: View {
         if isOn {
             return isDark ? Color(white: 0.92) : Color(white: 0.08)
         }
-        return AppColors.controlBackground
+        return appColors.controlBackground
     }
 
     private var knobColor: Color {
