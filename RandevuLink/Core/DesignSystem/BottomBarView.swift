@@ -3,7 +3,6 @@ import SwiftUI
 enum BottomBarMode: String, CaseIterable {
     case focus
     case notes
-    case daily
 }
 
 struct BottomBarView: View {
@@ -13,9 +12,11 @@ struct BottomBarView: View {
     var isListening: Bool = false
     var showsListen: Bool = true
     var onListen: () -> Void = {}
+    var onStamp: (() -> Void)?
     var onEnter: (() -> Void)?
     var onSample: (() -> Void)?
-    var onAdd: (() -> Void)?
+
+    private let control: CGFloat = 44
 
     var body: some View {
         HStack(spacing: 12) {
@@ -28,55 +29,35 @@ struct BottomBarView: View {
             if showsListen {
                 listenButton
             }
-
+            if let onStamp {
+                iconButton(systemName: "calendar.badge.clock", label: l10n(.notesStampDate), action: onStamp)
+            }
             if let onSample {
                 iconButton(systemName: "text.insert", label: "Lorem", action: onSample)
             }
-
             if let onEnter {
                 iconButton(systemName: "arrow.turn.down.left", label: l10n(.notesDetailAddItem), action: onEnter)
             }
-
-            addButton
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
-    }
-
-    @ViewBuilder
-    private var addButton: some View {
-        if let onAdd {
-            Button(action: onAdd) {
-                plusIcon
-            }
-            .buttonStyle(.plain)
-            .contentShape(Circle())
-            .accessibilityLabel(l10n(.notesGroupNew))
-        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
     }
 
     private func iconButton(systemName: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(appColors.icon)
-                .frame(width: AppSpacing.controlSize, height: AppSpacing.controlSize)
-                .background(appColors.controlBackground)
-                .clipShape(Circle())
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(appColors.textPrimary)
+                .frame(width: control, height: control)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
+        .background {
+            Color.clear
+                .modifier(JoinedGlass(circle: true, interactive: false))
+                .allowsHitTesting(false)
+        }
         .accessibilityLabel(label)
-    }
-
-    private var plusIcon: some View {
-        Image(systemName: "plus")
-            .font(.system(size: 15, weight: .bold))
-            .foregroundStyle(appColors.icon)
-            .frame(width: AppSpacing.controlSize, height: AppSpacing.controlSize)
-            .background(appColors.controlBackground)
-            .clipShape(Circle())
-            .contentShape(Circle())
     }
 
     private var modeToggle: some View {
@@ -84,34 +65,40 @@ struct BottomBarView: View {
             toggleItem(systemName: "note.text", isSelected: mode == .notes, label: l10n(.notesTitle)) {
                 mode = .notes
             }
-            toggleItem(systemName: "calendar", isSelected: mode == .daily, label: l10n(.dailyTitle)) {
-                mode = .daily
-            }
             toggleItem(systemName: "gearshape", isSelected: mode == .focus, label: l10n(.settingsTitle)) {
                 mode = .focus
             }
         }
-        .padding(4)
-        .background(appColors.controlBackground)
-        .clipShape(Capsule())
+        .background {
+            Color.clear
+                .modifier(JoinedGlass(circle: false, interactive: false))
+                .allowsHitTesting(false)
+        }
     }
 
     private var listenButton: some View {
         Button(action: onListen) {
-            HStack(spacing: 8) {
-                Image(systemName: isListening ? "stop.fill" : "play.fill")
-                    .font(.system(size: 12, weight: .bold))
-                Text(l10n(isListening ? .commonStop : .commonListen))
-                    .font(AppTypography.listen)
-            }
-            .foregroundStyle(appColors.background)
-            .padding(.horizontal, 18)
-            .frame(height: AppSpacing.controlSize)
-            .background(appColors.accent)
-            .clipShape(Capsule())
-            .contentShape(Capsule())
+            listenLabel(systemName: isListening ? "stop.fill" : "play.fill", title: l10n(isListening ? .commonStop : .commonListen))
         }
         .buttonStyle(.plain)
+        .background {
+            Color.clear
+                .modifier(JoinedGlass(circle: false, interactive: false))
+                .allowsHitTesting(false)
+        }
+    }
+
+    private func listenLabel(systemName: String, title: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemName)
+                .font(.system(size: 13, weight: .bold))
+            Text(title)
+                .font(.system(size: 16, weight: .semibold))
+        }
+        .foregroundStyle(appColors.textPrimary)
+        .padding(.horizontal, 16)
+        .frame(height: control)
+        .contentShape(Capsule())
     }
 
     private func toggleItem(
@@ -122,14 +109,44 @@ struct BottomBarView: View {
     ) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(isSelected ? appColors.textPrimary : appColors.textSecondary)
-                .frame(width: 40, height: 40)
-                .background(isSelected ? appColors.controlSelected : Color.clear)
-                .clipShape(Circle())
+                .frame(width: control, height: control)
+                .background {
+                    if isSelected {
+                        Circle()
+                            .fill(appColors.controlSelected)
+                            .padding(4)
+                    }
+                }
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+    }
+}
+
+struct JoinedGlass: ViewModifier {
+    var circle: Bool
+    var interactive: Bool = false
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26, *) {
+            if interactive {
+                if circle {
+                    content.glassEffect(.regular.interactive(), in: Circle())
+                } else {
+                    content.glassEffect(.regular.interactive(), in: Capsule())
+                }
+            } else if circle {
+                content.glassEffect(.regular, in: Circle())
+            } else {
+                content.glassEffect(.regular, in: Capsule())
+            }
+        } else if circle {
+            content.background(Circle().fill(.ultraThinMaterial))
+        } else {
+            content.background(Capsule().fill(.ultraThinMaterial))
+        }
     }
 }

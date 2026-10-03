@@ -75,16 +75,6 @@ struct HoldToDelete: ViewModifier {
                         .transition(.opacity)
                 }
             }
-            .background {
-                if isEnabled, pressBegan != nil {
-                    TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: false)) { context in
-                        Color.clear
-                            .onChange(of: context.date) { _, date in
-                                syncProgress(at: date)
-                            }
-                    }
-                }
-            }
             .modifier(HoldGestureAttachment(
                 isEnabled: isEnabled,
                 onPressing: handlePress,
@@ -108,6 +98,7 @@ struct HoldToDelete: ViewModifier {
             suppressTap = false
             return
         }
+        guard !isEnabled else { return }
         onQuickTap()
     }
 
@@ -156,6 +147,10 @@ struct HoldToDelete: ViewModifier {
         suppressTap = true
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         scheduleMidpoint()
+        let span = HoldDelete.duration - HoldDelete.armDelay
+        withAnimation(.linear(duration: span)) {
+            progress = 1
+        }
     }
 
     private func scheduleMidpoint() {
@@ -168,17 +163,6 @@ struct HoldToDelete: ViewModifier {
             guard !Task.isCancelled, armed, pressBegan != nil, !committed else { return }
             generator.selectionChanged()
         }
-    }
-
-    private func syncProgress(at date: Date) {
-        guard let pressBegan, !committed else { return }
-        let elapsed = date.timeIntervalSince(pressBegan)
-        let span = HoldDelete.duration - HoldDelete.armDelay
-        guard elapsed >= HoldDelete.armDelay, span > 0 else {
-            progress = 0
-            return
-        }
-        progress = CGFloat(min(1, (elapsed - HoldDelete.armDelay) / span))
     }
 
     private func cancelHold() {

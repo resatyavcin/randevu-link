@@ -5,10 +5,10 @@ import SwiftData
 final class NotesRepository {
     struct Snapshot {
         var groups: [NoteGroup]
-        var dayGroups: [NoteGroup]
     }
 
     private let context: ModelContext
+    private(set) var lastLocalSave = Date.distantPast
 
     init(container: ModelContainer) {
         self.context = container.mainContext
@@ -17,21 +17,21 @@ final class NotesRepository {
     // MARK: Fetch
 
     func fetch() -> Snapshot {
-        let all = fetchEntities()
-        let customer = all.filter { !$0.isDaily }.map { $0.toDomain() }
-        let daily = all.filter { $0.isDaily }.map { $0.toDomain() }
-        return Snapshot(groups: customer, dayGroups: daily)
+        let groups = fetchEntities()
+            .filter { !$0.isDaily }
+            .map { $0.toDomain() }
+        return Snapshot(groups: groups)
     }
 
-    // MARK: Customer groups
+    // MARK: Groups
 
     @discardableResult
-    func createGroup(title: String, items: [NoteItem]) -> NoteGroup {
-        let entity = NoteGroupEntity(title: title)
+    func createGroup(title: String, items: [NoteItem], isTodoList: Bool = false) -> NoteGroup {
+        let entity = NoteGroupEntity(title: title, isTodoList: isTodoList)
         for item in items {
             let itemEntity = NoteEntityFactory.makeItem(from: item)
             itemEntity.group = entity
-            entity.items.append(itemEntity)
+            entity.items = (entity.items ?? []) + [itemEntity]
         }
         context.insert(entity)
         save()
@@ -51,30 +51,16 @@ final class NotesRepository {
         save()
     }
 
+    func setSinkCompleted(groupId: String, sinkCompleted: Bool) {
+        guard let entity = findGroup(id: groupId), entity.isTodoList, entity.sinkCompleted != sinkCompleted else { return }
+        entity.sinkCompleted = sinkCompleted
+        save()
+    }
+
     func deleteGroup(id: String) {
         guard let entity = findGroup(id: id) else { return }
         context.delete(entity)
         save()
-    }
-
-    // MARK: Daily groups
-
-    @discardableResult
-    func ensureDayGroup(dayKey: String) -> NoteGroupEntity {
-        if let entity = findDayGroup(dayKey: dayKey) {
-            return entity
-        }
-        let date = DayKey.date(from: dayKey) ?? Date()
-        let entity = NoteGroupEntity(
-            title: "",
-            createdAt: date,
-            updatedAt: date,
-            isDaily: true,
-            dayKey: dayKey
-        )
-        context.insert(entity)
-        save()
-        return entity
     }
 
     // MARK: Items
@@ -85,42 +71,40 @@ final class NotesRepository {
         let item = NoteItem(text: text)
         let itemEntity = NoteEntityFactory.makeItem(from: item)
         itemEntity.group = entity
-        entity.items.append(itemEntity)
+        entity.items = (entity.items ?? []) + [itemEntity]
         entity.updatedAt = Date()
         context.insert(itemEntity)
         save()
         return itemEntity.toDomain()
     }
 
-    func updateItem(groupId: String, itemId: String, mutate: (inout NoteItem) -> Void) {
+    @discardableResult
+    func updateItem(groupId: String, itemId: String, mutate: (inout NoteItem) -> Void) -> NoteItem? {
         guard
             let entity = findGroup(id: groupId),
-            let itemEntity = entity.items.first(where: { $0.id.uuidString == itemId })
-        else { return }
+            let itemEntity = entity.items?.first(where: { $0.id.uuidString == itemId })
+        else { return nil }
         var domain = itemEntity.toDomain()
         mutate(&domain)
         itemEntity.apply(domain)
         entity.updatedAt = Date()
         save()
+        return domain
     }
 
     func deleteItem(groupId: String, itemId: String) {
         guard
             let entity = findGroup(id: groupId),
-            let itemEntity = entity.items.first(where: { $0.id.uuidString == itemId })
+            let itemEntity = entity.items?.first(where: { $0.id.uuidString == itemId })
         else { return }
-        let remaining = entity.items.filter { $0.id.uuidString != itemId }
         context.delete(itemEntity)
-        if entity.isDaily, remaining.isEmpty {
-            context.delete(entity)
-        }
         save()
     }
 
     func markTimerReminded(groupId: String, itemId: String) {
         guard
             let entity = findGroup(id: groupId),
-            let itemEntity = entity.items.first(where: { $0.id.uuidString == itemId })
+            let itemEntity = entity.items?.first(where: { $0.id.uuidString == itemId })
         else { return }
         itemEntity.timerReminded = true
         save()
@@ -128,7 +112,7 @@ final class NotesRepository {
 
     // MARK: Seed
 
-    func seedDefaults(_ groups: [NoteGroup], dayGroups: [NoteGroup]) {
+    func seedDefaults(_ groups: [NoteGroup]) {
         for group in groups {
             let entity = NoteGroupEntity(
                 title: group.title,
@@ -139,22 +123,7 @@ final class NotesRepository {
             for item in group.items {
                 let itemEntity = NoteEntityFactory.makeItem(from: item)
                 itemEntity.group = entity
-                entity.items.append(itemEntity)
-            }
-            context.insert(entity)
-        }
-        for group in dayGroups {
-            let entity = NoteGroupEntity(
-                title: "",
-                createdAt: group.updatedAt,
-                updatedAt: group.updatedAt,
-                isDaily: true,
-                dayKey: group.id
-            )
-            for item in group.items {
-                let itemEntity = NoteEntityFactory.makeItem(from: item)
-                itemEntity.group = entity
-                entity.items.append(itemEntity)
+                entity.items = (entity.items ?? []) + [itemEntity]
             }
             context.insert(entity)
         }
@@ -173,21 +142,19 @@ final class NotesRepository {
     }
 
     private func findGroup(id: String) -> NoteGroupEntity? {
-        let all = fetchEntities()
-        if let uuid = UUID(uuidString: id), let match = all.first(where: { $0.id == uuid }) {
-            return match
-        }
-        return all.first { $0.isDaily && $0.dayKey == id }
-    }
-
-    private func findDayGroup(dayKey: String) -> NoteGroupEntity? {
-        fetchEntities().first { $0.isDaily && $0.dayKey == dayKey }
+        guard let uuid = UUID(uuidString: id) else { return nil }
+        var descriptor = FetchDescriptor<NoteGroupEntity>(
+            predicate: #Predicate { $0.id == uuid && $0.isDaily == false }
+        )
+        descriptor.fetchLimit = 1
+        return try? context.fetch(descriptor).first
     }
 
     private func save() {
         guard context.hasChanges else { return }
         do {
             try context.save()
+            lastLocalSave = Date()
         } catch {
             #if DEBUG
             print("NotesRepository save error: \(error)")
@@ -219,21 +186,5 @@ enum DefaultNotesSeed {
                 isPinned: true
             )
         ]
-    }
-
-    static func dayGroups(on date: Date = Date(), calendar: Calendar = .current) -> [NoteGroup] {
-        guard
-            let yesterday = calendar.date(byAdding: .day, value: -1, to: date),
-            let lastMonth = calendar.date(byAdding: .month, value: -1, to: date)
-        else { return [] }
-        return [
-            day(yesterday, texts: ["Kesim", "Fön"]),
-            day(lastMonth, texts: ["Kök boya", "Bakım", "Fön"])
-        ]
-    }
-
-    private static func day(_ date: Date, texts: [String]) -> NoteGroup {
-        let items = texts.map { NoteItem(text: $0, createdAt: date) }
-        return NoteGroup(id: DayKey.id(for: date), title: "", items: items, updatedAt: date)
     }
 }

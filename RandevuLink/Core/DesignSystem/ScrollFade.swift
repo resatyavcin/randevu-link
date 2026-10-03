@@ -3,7 +3,6 @@ import SwiftUI
 struct EdgeFade: ViewModifier {
     @Environment(\.appColors) private var appColors
     var top: CGFloat = 20
-    var bottom: CGFloat = AppSpacing.bottomBarInset
 
     func body(content: Content) -> some View {
         content
@@ -21,26 +20,12 @@ struct EdgeFade: ViewModifier {
                 .frame(height: top)
                 .allowsHitTesting(false)
             }
-            .overlay(alignment: .bottom) {
-                LinearGradient(
-                    stops: [
-                        .init(color: appColors.background.opacity(0), location: 0),
-                        .init(color: appColors.background, location: 0.22),
-                        .init(color: appColors.background, location: 1)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(maxWidth: .infinity)
-                .frame(height: bottom)
-                .allowsHitTesting(false)
-            }
     }
 }
 
 extension View {
-    func edgeFade(top: CGFloat = 20, bottom: CGFloat = AppSpacing.bottomBarInset) -> some View {
-        modifier(EdgeFade(top: top, bottom: bottom))
+    func edgeFade(top: CGFloat = 20) -> some View {
+        modifier(EdgeFade(top: top))
     }
 
     func screenScroll() -> some View {

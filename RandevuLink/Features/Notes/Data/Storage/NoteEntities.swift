@@ -3,16 +3,20 @@ import SwiftData
 
 @Model
 final class NoteGroupEntity {
-    @Attribute(.unique) var id: UUID
-    var title: String
-    var createdAt: Date
-    var updatedAt: Date
-    var isPinned: Bool
-    var isDaily: Bool
+    var id: UUID = UUID()
+    var title: String = ""
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
+    var isPinned: Bool = false
+    /// Unused. Kept so existing SwiftData/CloudKit stores still open.
+    var isDaily: Bool = false
+    var isTodoList: Bool = false
+    var sinkCompleted: Bool = false
+    /// Unused. Kept so existing SwiftData/CloudKit stores still open.
     var dayKey: String?
 
     @Relationship(deleteRule: .cascade, inverse: \NoteItemEntity.group)
-    var items: [NoteItemEntity]
+    var items: [NoteItemEntity]? = []
 
     init(
         id: UUID = UUID(),
@@ -21,6 +25,8 @@ final class NoteGroupEntity {
         updatedAt: Date = Date(),
         isPinned: Bool = false,
         isDaily: Bool = false,
+        isTodoList: Bool = false,
+        sinkCompleted: Bool = false,
         dayKey: String? = nil,
         items: [NoteItemEntity] = []
     ) {
@@ -30,6 +36,8 @@ final class NoteGroupEntity {
         self.updatedAt = updatedAt
         self.isPinned = isPinned
         self.isDaily = isDaily
+        self.isTodoList = isTodoList
+        self.sinkCompleted = sinkCompleted
         self.dayKey = dayKey
         self.items = items
     }
@@ -37,18 +45,23 @@ final class NoteGroupEntity {
 
 @Model
 final class NoteItemEntity {
-    @Attribute(.unique) var id: UUID
-    var text: String
-    var createdAt: Date
-    var isDone: Bool
-    var isBold: Bool
-    var isItalic: Bool
-    var defaultDurationSeconds: Double
-    var boldFlags: [Bool]
-    var italicFlags: [Bool]
+    var id: UUID = UUID()
+    var text: String = ""
+    var createdAt: Date = Date()
+    var isDone: Bool = false
+    var isBold: Bool = false
+    var isItalic: Bool = false
+    var blinks: Bool = false
+    var colorId: String?
+    var rating: Int = 0
+    var ratingScore: Double = 0
+    var defaultDurationSeconds: Double = NoteItem.defaultDuration
+    var boldFlags: [Bool] = []
+    var italicFlags: [Bool] = []
     var timerStartedAt: Date?
     var timerDuration: Double?
-    var timerReminded: Bool
+    var timerReminded: Bool = false
+    var completedAt: Date?
     var group: NoteGroupEntity?
 
     init(
@@ -58,12 +71,17 @@ final class NoteItemEntity {
         isDone: Bool = false,
         isBold: Bool = false,
         isItalic: Bool = false,
+        blinks: Bool = false,
+        colorId: String? = nil,
+        rating: Int = 0,
+        ratingScore: Double = 0,
         defaultDurationSeconds: Double = NoteItem.defaultDuration,
         boldFlags: [Bool] = [],
         italicFlags: [Bool] = [],
         timerStartedAt: Date? = nil,
         timerDuration: Double? = nil,
-        timerReminded: Bool = false
+        timerReminded: Bool = false,
+        completedAt: Date? = nil
     ) {
         self.id = id
         self.text = text
@@ -71,25 +89,31 @@ final class NoteItemEntity {
         self.isDone = isDone
         self.isBold = isBold
         self.isItalic = isItalic
+        self.blinks = blinks
+        self.colorId = colorId
+        self.rating = rating
+        self.ratingScore = ratingScore
         self.defaultDurationSeconds = defaultDurationSeconds
         self.boldFlags = boldFlags
         self.italicFlags = italicFlags
         self.timerStartedAt = timerStartedAt
         self.timerDuration = timerDuration
         self.timerReminded = timerReminded
+        self.completedAt = completedAt
     }
 }
 
 extension NoteGroupEntity {
     func toDomain() -> NoteGroup {
-        let sortedItems = items.sorted { $0.createdAt > $1.createdAt }
-        let identifier: String = isDaily ? (dayKey ?? id.uuidString) : id.uuidString
+        let sortedItems = (items ?? []).sorted { $0.createdAt > $1.createdAt }
         return NoteGroup(
-            id: identifier,
+            id: id.uuidString,
             title: title,
             items: sortedItems.map { $0.toDomain() },
             updatedAt: updatedAt,
-            isPinned: isPinned
+            isPinned: isPinned,
+            isTodoList: isTodoList,
+            sinkCompleted: sinkCompleted
         )
     }
 }
@@ -112,8 +136,12 @@ extension NoteItemEntity {
             isDone: isDone,
             isBold: isBold,
             isItalic: isItalic,
+            blinks: blinks,
+            colorId: colorId,
+            rating: (rating == 0 || ratingScore > 0) ? ratingScore : Double(rating),
             defaultDurationSeconds: defaultDurationSeconds,
-            createdAt: createdAt
+            createdAt: createdAt,
+            completedAt: completedAt
         )
     }
 
@@ -122,12 +150,26 @@ extension NoteItemEntity {
         isDone = item.isDone
         isBold = item.isBold
         isItalic = item.isItalic
+        blinks = item.blinks
+        colorId = item.colorId
+        rating = 0
+        ratingScore = item.rating
         defaultDurationSeconds = item.defaultDurationSeconds
         boldFlags = item.wordStyles.map(\.isBold)
         italicFlags = item.wordStyles.map(\.isItalic)
         timerStartedAt = item.timer?.startedAt
         timerDuration = item.timer?.durationSeconds
         timerReminded = item.timer?.reminded ?? false
+        completedAt = item.completedAt
+    }
+}
+
+@Model
+final class AppPreferenceEntity {
+    var todoColorId: String = "lilac"
+
+    init(todoColorId: String = "lilac") {
+        self.todoColorId = todoColorId
     }
 }
 
@@ -140,12 +182,17 @@ enum NoteEntityFactory {
             isDone: item.isDone,
             isBold: item.isBold,
             isItalic: item.isItalic,
+            blinks: item.blinks,
+            colorId: item.colorId,
+            rating: 0,
+            ratingScore: item.rating,
             defaultDurationSeconds: item.defaultDurationSeconds,
             boldFlags: item.wordStyles.map(\.isBold),
             italicFlags: item.wordStyles.map(\.isItalic),
             timerStartedAt: item.timer?.startedAt,
             timerDuration: item.timer?.durationSeconds,
-            timerReminded: item.timer?.reminded ?? false
+            timerReminded: item.timer?.reminded ?? false,
+            completedAt: item.completedAt
         )
         return entity
     }

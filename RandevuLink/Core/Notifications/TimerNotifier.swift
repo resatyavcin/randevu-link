@@ -6,8 +6,9 @@ enum TimerNotifier {
         UNUserNotificationCenter.current().delegate = ForegroundSilencer.shared
     }
 
-    static func schedule(item: NoteItem) {
-        guard let timer = item.timer, !timer.reminded, !item.isDone else {
+    static func schedule(item: NoteItem, honorDone: Bool = true) {
+        let blocked = honorDone && item.isDone
+        guard let timer = item.timer, !timer.reminded, !blocked else {
             cancel(itemId: item.id)
             return
         }
@@ -34,9 +35,10 @@ enum TimerNotifier {
     }
 
     static func resync(groups: [NoteGroup]) {
-        let items = groups.flatMap(\.items)
-        for item in items {
-            schedule(item: item)
+        for group in groups {
+            for item in group.items {
+                schedule(item: item, honorDone: group.isTodoList)
+            }
         }
     }
 

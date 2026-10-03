@@ -14,12 +14,16 @@ final class NoteGroupDetailViewModel: ObservableObject {
         store.group(id: groupId)
     }
 
-    func rename(title: String) {
-        store.rename(groupId: groupId, title: title)
+    func rename(title: String, reflectInList: Bool = true) {
+        store.rename(groupId: groupId, title: title, reflectInList: reflectInList)
     }
 
     func setPinned(_ isPinned: Bool) {
         store.setPinned(groupId: groupId, isPinned: isPinned)
+    }
+
+    func setSinkCompleted(_ sinkCompleted: Bool) {
+        store.setSinkCompleted(groupId: groupId, sinkCompleted: sinkCompleted)
     }
 
     func addItem(text: String) {

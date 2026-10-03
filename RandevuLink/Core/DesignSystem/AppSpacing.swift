@@ -11,6 +11,6 @@ enum AppSpacing {
     static let rowHorizontal: CGFloat = 16
     static let rowGap: CGFloat = 4
     static let cardRadius: CGFloat = 16
-    static let bottomBarInset: CGFloat = 108
+    static let bottomBarInset: CGFloat = 112
     static let controlSize: CGFloat = 48
 }

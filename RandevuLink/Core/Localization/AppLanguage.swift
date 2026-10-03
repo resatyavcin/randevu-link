@@ -15,4 +15,22 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     }
 
     var localeIdentifier: String { rawValue }
+
+    /// Konusma tanima yereli. Uygulama kodu "tr"/"en"; Speech bolge ister.
+    var speechLocale: Locale {
+        switch self {
+        case .turkish: Locale(identifier: "tr-TR")
+        case .english: Locale(identifier: "en-US")
+        }
+    }
+
+    static let storageKey = "settings.language"
+
+    static var stored: AppLanguage {
+        guard let raw = UserDefaults.standard.string(forKey: storageKey),
+              let language = AppLanguage(rawValue: raw) else {
+            return .turkish
+        }
+        return language
+    }
 }

@@ -35,6 +35,27 @@ enum NoteWords {
         text.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
     }
 
+    static func indices(in text: String, overlapping selection: NSRange) -> [Int] {
+        guard selection.length > 0 else { return [] }
+        let ns = text as NSString
+        let selectionEnd = selection.location + selection.length
+        var search = 0
+        var hits: [Int] = []
+        for (index, word) in parts(text).enumerated() {
+            let found = ns.range(
+                of: word,
+                range: NSRange(location: search, length: ns.length - search)
+            )
+            guard found.location != NSNotFound else { continue }
+            let wordEnd = found.location + found.length
+            if found.location < selectionEnd, wordEnd > selection.location {
+                hits.append(index)
+            }
+            search = wordEnd
+        }
+        return hits
+    }
+
     static func aligned(oldText: String, oldStyles: [NoteWordStyle], newText: String) -> [NoteWordStyle] {
         let oldWords = parts(oldText)
         let newWords = parts(newText)
@@ -93,6 +114,9 @@ struct NoteItem: Identifiable, Equatable, Sendable {
     var isDone: Bool
     var isBold: Bool
     var isItalic: Bool
+    var blinks: Bool
+    var colorId: String?
+    var rating: Double
     var defaultDurationSeconds: TimeInterval
 
     static let defaultDuration: TimeInterval = 30 * 60
@@ -105,8 +129,12 @@ struct NoteItem: Identifiable, Equatable, Sendable {
         isDone: Bool = false,
         isBold: Bool = false,
         isItalic: Bool = false,
+        blinks: Bool = false,
+        colorId: String? = nil,
+        rating: Double = 0,
         defaultDurationSeconds: TimeInterval = NoteItem.defaultDuration,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        completedAt: Date? = nil
     ) {
         self.id = id
         self.text = text
@@ -115,11 +143,20 @@ struct NoteItem: Identifiable, Equatable, Sendable {
         self.isDone = isDone
         self.isBold = isBold
         self.isItalic = isItalic
+        self.blinks = blinks
+        self.colorId = colorId
+        self.rating = rating
         self.defaultDurationSeconds = defaultDurationSeconds
         self.createdAt = createdAt
+        self.completedAt = completedAt
     }
 
     var createdAt: Date
+    var completedAt: Date?
+
+    var blinkColor: NoteTodoColor? {
+        colorId.flatMap(NoteTodoColor.init(rawValue:))
+    }
 }
 
 struct NoteGroup: Identifiable, Equatable, Sendable {
@@ -128,10 +165,13 @@ struct NoteGroup: Identifiable, Equatable, Sendable {
     var items: [NoteItem]
     var updatedAt: Date = Date()
     var isPinned: Bool = false
+    var isTodoList: Bool = false
+    var sinkCompleted: Bool = false
 
     func longestRemainingSeconds(at date: Date = Date()) -> TimeInterval? {
         items.compactMap { item -> TimeInterval? in
-            guard !item.isDone, let timer = item.timer, !timer.isFinished(at: date) else { return nil }
+            let completed = isTodoList && item.isDone
+            guard !completed, let timer = item.timer, !timer.isFinished(at: date) else { return nil }
             return timer.remaining(at: date)
         }.max()
     }
@@ -158,31 +198,43 @@ enum RelativeDay {
 }
 
 struct DayBucket<Item: Identifiable>: Identifiable {
+    /// Stays put when a newer row is inserted at the top of the day.
+    let id: String
     let title: String
     var items: [Item]
-
-    var id: Item.ID { items[0].id }
 }
 
 enum DayBuckets {
+    private struct Run<Item> {
+        var day: String
+        var title: String
+        var items: [Item]
+    }
+
     static func group<Item: Identifiable>(
         _ items: [Item],
         date: (Item) -> Date,
         title: (Date) -> String,
         calendar: Calendar = .current
     ) -> [DayBucket<Item>] {
-        var buckets: [DayBucket<Item>] = []
-        var lastDay: String?
+        var runs: [Run<Item>] = []
         for item in items {
             let day = DayKey.id(for: date(item), calendar: calendar)
-            if day == lastDay, !buckets.isEmpty {
-                buckets[buckets.count - 1].items.append(item)
+            if runs.last?.day == day {
+                runs[runs.count - 1].items.append(item)
             } else {
-                buckets.append(DayBucket(title: title(date(item)), items: [item]))
-                lastDay = day
+                runs.append(Run(day: day, title: title(date(item)), items: [item]))
             }
         }
-        return buckets
+
+        return runs.map { run in
+            let anchor = run.items.min { date($0) < date($1) } ?? run.items[0]
+            return DayBucket(
+                id: "\(run.day)-\(String(describing: anchor.id))",
+                title: run.title,
+                items: run.items
+            )
+        }
     }
 }
 

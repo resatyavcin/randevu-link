@@ -6,48 +6,9 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		B1000000000000000000000A /* WarmupWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B10000000000000000000005 /* WarmupWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-/* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		B10000000000000000000001 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A10000000000000000000001 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B10000000000000000000006;
-			remoteInfo = WarmupWidget;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		B10000000000000000000009 /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				B1000000000000000000000A /* WarmupWidget.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		A10000000000000000000005 /* RandevuLink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RandevuLink.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B10000000000000000000005 /* WarmupWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WarmupWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B1000000000000000000000E /* Exceptions for "WarmupWidget" folder in "WarmupWidget" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = B10000000000000000000006 /* WarmupWidget */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A10000000000000000000004 /* RandevuLink */ = {
@@ -55,25 +16,10 @@
 			path = RandevuLink;
 			sourceTree = "<group>";
 		};
-		B10000000000000000000004 /* WarmupWidget */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				B1000000000000000000000E /* Exceptions for "WarmupWidget" folder in "WarmupWidget" target */,
-			);
-			path = WarmupWidget;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A10000000000000000000008 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B10000000000000000000008 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -87,7 +33,6 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000004 /* RandevuLink */,
-				B10000000000000000000004 /* WarmupWidget */,
 				A10000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -96,7 +41,6 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000005 /* RandevuLink.app */,
-				B10000000000000000000005 /* WarmupWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -111,12 +55,10 @@
 				A10000000000000000000007 /* Sources */,
 				A10000000000000000000008 /* Frameworks */,
 				A10000000000000000000009 /* Resources */,
-				B10000000000000000000009 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				B1000000000000000000000D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A10000000000000000000004 /* RandevuLink */,
@@ -125,26 +67,6 @@
 			productName = RandevuLink;
 			productReference = A10000000000000000000005 /* RandevuLink.app */;
 			productType = "com.apple.product-type.application";
-		};
-		B10000000000000000000006 /* WarmupWidget */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = B1000000000000000000000B /* Build configuration list for PBXNativeTarget "WarmupWidget" */;
-			buildPhases = (
-				B10000000000000000000007 /* Sources */,
-				B10000000000000000000008 /* Frameworks */,
-				B1000000000000000000000C /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				B10000000000000000000004 /* WarmupWidget */,
-			);
-			name = WarmupWidget;
-			productName = WarmupWidget;
-			productReference = B10000000000000000000005 /* WarmupWidget.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -157,9 +79,6 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					A10000000000000000000006 = {
-						CreatedOnToolsVersion = 26.2;
-					};
-					B10000000000000000000006 = {
 						CreatedOnToolsVersion = 26.2;
 					};
 				};
@@ -180,20 +99,12 @@
 			projectRoot = "";
 			targets = (
 				A10000000000000000000006 /* RandevuLink */,
-				B10000000000000000000006 /* WarmupWidget */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A10000000000000000000009 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B1000000000000000000000C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -210,22 +121,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B10000000000000000000007 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		B1000000000000000000000D /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B10000000000000000000006 /* WarmupWidget */;
-			targetProxy = B10000000000000000000001 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A1000000000000000000000C /* Debug */ = {
@@ -425,64 +321,6 @@
 			};
 			name = Release;
 		};
-		B10000000000000000000011 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = WarmupWidget/WarmupWidget.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 487W2NSXZB;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = WarmupWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Warmup;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.resatyavcin.app.WarmupWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		B10000000000000000000012 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = WarmupWidget/WarmupWidget.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 487W2NSXZB;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = WarmupWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Warmup;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.resatyavcin.app.WarmupWidget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -500,15 +338,6 @@
 			buildConfigurations = (
 				A1000000000000000000000E /* Debug */,
 				A1000000000000000000000F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B1000000000000000000000B /* Build configuration list for PBXNativeTarget "WarmupWidget" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B10000000000000000000011 /* Debug */,
-				B10000000000000000000012 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

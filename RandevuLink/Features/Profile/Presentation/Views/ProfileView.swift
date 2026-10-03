@@ -16,35 +16,34 @@ struct ProfileView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.sectionGap) {
                     if let profile = viewModel.profile {
-                        TimelineView(.periodic(from: .now, by: 1)) { context in
-                            let schedule = scheduledNotes(at: context.date)
-                            VStack(alignment: .leading, spacing: AppSpacing.sectionGap) {
-                                GreetingHeaderView(
-                                    greeting: String(format: l10n(.profileGreeting), profile.greeting),
-                                    subtitle: schedule.today.isEmpty ? l10n(.profileSubtitle) : ""
-                                )
-                                .padding(.bottom, AppSpacing.headerToSections - AppSpacing.sectionGap)
+                        let schedule = scheduledNotes(at: Date())
+                        VStack(alignment: .leading, spacing: AppSpacing.sectionGap) {
+                            GreetingHeaderView(
+                                greeting: String(format: l10n(.profileGreeting), profile.greeting),
+                                subtitle: schedule.today.isEmpty ? l10n(.profileSubtitle) : ""
+                            )
+                            .padding(.bottom, AppSpacing.headerToSections - AppSpacing.sectionGap)
 
-                                dueSection(
-                                    title: l10n(.profileDueToday),
-                                    notes: schedule.today,
-                                    showsBadge: true
-                                )
-                                dueSection(
-                                    title: l10n(.profileDueTomorrow),
-                                    notes: schedule.tomorrow,
-                                    showsBadge: false
-                                )
-                                dueSection(
-                                    title: l10n(.profileDueLater),
-                                    notes: schedule.later,
-                                    showsBadge: false
-                                )
-                            }
+                            dueSection(
+                                title: l10n(.profileDueToday),
+                                notes: schedule.today,
+                                showsBadge: true
+                            )
+                            dueSection(
+                                title: l10n(.profileDueTomorrow),
+                                notes: schedule.tomorrow,
+                                showsBadge: false
+                            )
+                            dueSection(
+                                title: l10n(.profileDueLater),
+                                notes: schedule.later,
+                                showsBadge: false
+                            )
                         }
 
                         AppearanceSectionView(isDarkMode: $isDarkMode)
                         LanguageSectionView()
+                        TimeZoneSectionView()
                     }
                 }
                 .padding(.horizontal, AppSpacing.screenHorizontal)
@@ -90,7 +89,8 @@ struct ProfileView: View {
         for group in notes.groups {
             let source = group.title.isEmpty ? l10n(.notesGroupNew) : group.title
             for item in group.items {
-                guard !item.isDone, let timer = item.timer, !timer.isFinished(at: date) else { continue }
+                let completed = group.isTodoList && item.isDone
+                guard !completed, let timer = item.timer, !timer.isFinished(at: date) else { continue }
                 let endsAt = timer.startedAt.addingTimeInterval(timer.durationSeconds)
                 let note = ScheduledNote(
                     id: item.id,
@@ -138,4 +138,5 @@ private struct DueSchedule {
         isDarkMode: .constant(false)
     )
     .environmentObject(LocalizationManager())
+    .environmentObject(TimeZoneStore())
 }

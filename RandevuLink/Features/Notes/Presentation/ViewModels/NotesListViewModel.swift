@@ -1,11 +1,9 @@
 import Foundation
 import CoreData
-import WidgetKit
 
 @MainActor
 final class NotesListViewModel: ObservableObject {
     @Published private(set) var groups: [NoteGroup] = []
-    @Published private(set) var dayGroups: [NoteGroup] = []
     @Published private(set) var reminderText: String?
     @Published private(set) var finishedItemIDs: [String] = []
     @Published var popToList = false
@@ -22,6 +20,7 @@ final class NotesListViewModel: ObservableObject {
     private var freshItemTask: Task<Void, Never>?
     private var remoteObserver: NSObjectProtocol?
     private var remoteRefreshTask: Task<Void, Never>?
+    private var openGroupHandler: ((String) -> Void)?
 
     init(repository: NotesRepository) {
         self.repository = repository
@@ -39,35 +38,17 @@ final class NotesListViewModel: ObservableObject {
     func load() {
         if !didLoad {
             if repository.isEmpty {
-                repository.seedDefaults(DefaultNotesSeed.groups(), dayGroups: DefaultNotesSeed.dayGroups())
+                repository.seedDefaults(DefaultNotesSeed.groups())
             }
             apply(repository.fetch())
             didLoad = true
         }
         watchTimers()
-        publishWidgetSnapshot()
-        TimerNotifier.resync(groups: groups + dayGroups)
+        TimerNotifier.resync(groups: groups)
     }
 
     func group(id: String) -> NoteGroup? {
-        groups.first { $0.id == id } ?? dayGroups.first { $0.id == id }
-    }
-
-    func addDailyLine(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        let id = DayKey.id(for: Date())
-        _ = repository.ensureDayGroup(dayKey: id)
-        if let item = repository.addItem(groupId: id, text: trimmed) {
-            showFreshItem(item.id)
-        }
-        refresh(syncNotifications: true)
-    }
-
-    func finishDailySpeech(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        addDailyLine(trimmed)
+        groups.first { $0.id == id }
     }
 
     var orderedGroups: [NoteGroup] {
@@ -77,10 +58,18 @@ final class NotesListViewModel: ObservableObject {
         }
     }
 
+    func bindGroupOpener(_ handler: ((String) -> Void)?) {
+        openGroupHandler = handler
+    }
+
     func focusMostRecentGroup() {
         guard let id = groups.max(by: { $0.updatedAt < $1.updatedAt })?.id else { return }
         activeGroupId = id
-        groupToOpen = id
+        if let openGroupHandler {
+            openGroupHandler(id)
+        } else {
+            groupToOpen = id
+        }
     }
 
     func consumeGroupToOpen() {
@@ -98,20 +87,24 @@ final class NotesListViewModel: ObservableObject {
     }
 
     @discardableResult
-    func createGroup(title: String) -> String? {
+    func createGroup(title: String, isTodoList: Bool = false) -> String? {
         let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else { return nil }
         let lines = pendingLines
         pendingLines = []
         let items = lines.map(makeItem)
-        let group = repository.createGroup(title: title, items: items)
+        let group = repository.createGroup(title: title, items: items, isTodoList: isTodoList)
         activeGroupId = group.id
+        groups.append(group)
         showFreshGroup(group.id)
         if let newest = items.last {
             showFreshItem(newest.id)
         }
-        popToList = true
-        refresh(syncNotifications: true)
+        watchTimers()
+        TimerNotifier.resync(groups: groups)
+        Task { @MainActor in
+            popToList = true
+        }
         return group.id
     }
 
@@ -129,10 +122,15 @@ final class NotesListViewModel: ObservableObject {
     func addItem(groupId: String, text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        if let item = repository.addItem(groupId: groupId, text: trimmed) {
-            showFreshItem(item.id)
+        guard let item = repository.addItem(groupId: groupId, text: trimmed) else { return }
+        showFreshItem(item.id)
+        guard var group = group(id: groupId) else {
+            refresh(syncNotifications: true)
+            return
         }
-        refresh(syncNotifications: true)
+        group.items.insert(item, at: 0)
+        group.updatedAt = Date()
+        replace(group, syncNotifications: true)
     }
 
     func deleteGroup(id: String) {
@@ -145,69 +143,129 @@ final class NotesListViewModel: ObservableObject {
             activeGroupId = nil
         }
         finishedItemIDs.removeAll { itemIDs.contains($0) }
-        refresh(syncNotifications: true)
+        groups.removeAll { $0.id == id }
+        watchTimers()
+        TimerNotifier.resync(groups: groups)
     }
 
-    func updateItemText(groupId: String, itemId: String, text: String, wordStyles: [NoteWordStyle]) {
-        repository.updateItem(groupId: groupId, itemId: itemId) { item in
+    func updateItemText(
+        groupId: String,
+        itemId: String,
+        text: String,
+        wordStyles: [NoteWordStyle],
+        reflectInList: Bool = true
+    ) {
+        guard let updated = repository.updateItem(groupId: groupId, itemId: itemId, mutate: { item in
             item.text = text
             item.wordStyles = wordStyles
             item.isBold = false
             item.isItalic = false
+        }) else {
+            if reflectInList { refresh() }
+            return
         }
-        refresh()
+        guard reflectInList else { return }
+        replaceItem(groupId: groupId, item: updated)
     }
 
     func setItemBold(groupId: String, itemId: String, isBold: Bool) {
-        repository.updateItem(groupId: groupId, itemId: itemId) { item in
+        guard let updated = repository.updateItem(groupId: groupId, itemId: itemId, mutate: { item in
             item.isBold = isBold
-        }
-        refresh()
+        }) else { return }
+        replaceItem(groupId: groupId, item: updated)
     }
 
     func setItemItalic(groupId: String, itemId: String, isItalic: Bool) {
-        repository.updateItem(groupId: groupId, itemId: itemId) { item in
+        guard let updated = repository.updateItem(groupId: groupId, itemId: itemId, mutate: { item in
             item.isItalic = isItalic
-        }
-        refresh()
+        }) else { return }
+        replaceItem(groupId: groupId, item: updated)
+    }
+
+    func setItemRating(groupId: String, itemId: String, rating: Double) {
+        let next = (min(5, max(0, rating)) * 2).rounded() / 2
+        guard let updated = repository.updateItem(groupId: groupId, itemId: itemId, mutate: { item in
+            item.rating = next
+        }) else { return }
+        replaceItem(groupId: groupId, item: updated)
+    }
+
+    func setItemColor(groupId: String, itemId: String, colorId: String?) {
+        guard group(id: groupId)?.isTodoList != true else { return }
+        guard let updated = repository.updateItem(groupId: groupId, itemId: itemId, mutate: { item in
+            item.colorId = colorId
+            item.blinks = colorId != nil
+        }) else { return }
+        replaceItem(groupId: groupId, item: updated)
     }
 
     func deleteItem(groupId: String, itemId: String) {
         TimerNotifier.cancel(itemId: itemId)
         repository.deleteItem(groupId: groupId, itemId: itemId)
         finishedItemIDs.removeAll { $0 == itemId }
-        refresh(syncNotifications: true)
+        guard var group = group(id: groupId) else {
+            refresh(syncNotifications: true)
+            return
+        }
+        group.items.removeAll { $0.id == itemId }
+        replace(group, syncNotifications: true)
     }
 
-    func rename(groupId: String, title: String) {
+    func rename(groupId: String, title: String, reflectInList: Bool = true) {
         repository.rename(groupId: groupId, title: title)
-        refresh()
+        guard reflectInList, var group = group(id: groupId) else {
+            if reflectInList { refresh() }
+            return
+        }
+        guard group.title != title else { return }
+        group.title = title
+        group.updatedAt = Date()
+        replace(group)
     }
 
     func setPinned(groupId: String, isPinned: Bool) {
         repository.setPinned(groupId: groupId, isPinned: isPinned)
-        refresh()
+        guard var group = group(id: groupId) else {
+            refresh()
+            return
+        }
+        guard group.isPinned != isPinned else { return }
+        group.isPinned = isPinned
+        replace(group)
+    }
+
+    func setSinkCompleted(groupId: String, sinkCompleted: Bool) {
+        repository.setSinkCompleted(groupId: groupId, sinkCompleted: sinkCompleted)
+        guard var group = group(id: groupId) else {
+            refresh()
+            return
+        }
+        guard group.sinkCompleted != sinkCompleted else { return }
+        group.sinkCompleted = sinkCompleted
+        replace(group)
     }
 
     func startTimer(groupId: String, itemId: String, seconds: TimeInterval) {
         let duration = max(1, seconds)
-        repository.updateItem(groupId: groupId, itemId: itemId) { item in
+        guard let updated = repository.updateItem(groupId: groupId, itemId: itemId, mutate: { item in
             item.timer = NoteTimer(durationSeconds: duration)
             item.defaultDurationSeconds = duration
-        }
-        refresh(syncNotifications: true)
+        }) else { return }
+        replaceItem(groupId: groupId, item: updated, syncNotifications: true)
     }
 
     func toggleDone(groupId: String, itemId: String) {
+        guard group(id: groupId)?.isTodoList == true else { return }
         var becameDone = false
-        repository.updateItem(groupId: groupId, itemId: itemId) { item in
+        guard let updated = repository.updateItem(groupId: groupId, itemId: itemId, mutate: { item in
             item.isDone.toggle()
+            item.completedAt = item.isDone ? Date() : nil
             becameDone = item.isDone
-        }
+        }) else { return }
         if becameDone {
             TimerNotifier.cancel(itemId: itemId)
         }
-        refresh(syncNotifications: true)
+        replaceItem(groupId: groupId, item: updated, syncNotifications: true)
     }
 
     func consumeReminder() {
@@ -221,17 +279,19 @@ final class NotesListViewModel: ObservableObject {
     private func refresh(syncNotifications: Bool = false) {
         apply(repository.fetch())
         watchTimers()
-        publishWidgetSnapshot()
         if syncNotifications {
-            TimerNotifier.resync(groups: groups + dayGroups)
+            TimerNotifier.resync(groups: groups)
         }
     }
 
     private func scheduleRemoteRefresh() {
         remoteRefreshTask?.cancel()
         remoteRefreshTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 250_000_000)
+            try? await Task.sleep(nanoseconds: 300_000_000)
             guard !Task.isCancelled else { return }
+            // Local saves post the same notification. Skip that echo so typing
+            // does not refetch the whole store.
+            guard Date().timeIntervalSince(repository.lastLocalSave) >= 0.5 else { return }
             refreshFromStore()
         }
     }
@@ -242,23 +302,33 @@ final class NotesListViewModel: ObservableObject {
     }
 
     private func apply(_ snapshot: NotesRepository.Snapshot) {
+        guard groups != snapshot.groups else { return }
         groups = snapshot.groups
-        dayGroups = snapshot.dayGroups
     }
 
-    private func publishWidgetSnapshot() {
-        let now = Date()
-        let blocks = (groups + dayGroups).flatMap(\.items).compactMap { item -> WidgetTimerBlock? in
-            guard !item.isDone, let timer = item.timer, !timer.isFinished(at: now) else { return nil }
-            return WidgetTimerBlock(
-                title: item.text,
-                startedAt: timer.startedAt,
-                durationSeconds: timer.durationSeconds
-            )
+    private func replace(_ group: NoteGroup, syncNotifications: Bool = false) {
+        guard let index = groups.firstIndex(where: { $0.id == group.id }) else {
+            refresh(syncNotifications: syncNotifications)
+            return
         }
-        let language = UserDefaults.standard.string(forKey: "settings.language") ?? "tr"
-        WidgetSnapshotStore.save(WidgetSnapshot(blocks: blocks, language: language))
-        WidgetCenter.shared.reloadTimelines(ofKind: WidgetSnapshotStore.kind)
+        guard groups[index] != group else { return }
+        groups[index] = group
+        if syncNotifications {
+            watchTimers()
+            TimerNotifier.resync(groups: groups)
+        }
+    }
+
+    private func replaceItem(groupId: String, item: NoteItem, syncNotifications: Bool = false) {
+        guard var group = group(id: groupId),
+              let index = group.items.firstIndex(where: { $0.id == item.id })
+        else {
+            refresh(syncNotifications: syncNotifications)
+            return
+        }
+        group.items[index] = item
+        group.updatedAt = Date()
+        replace(group, syncNotifications: syncNotifications)
     }
 
     private func targetGroupId(openGroupId: String?) -> String? {
@@ -279,7 +349,7 @@ final class NotesListViewModel: ObservableObject {
         freshGroupId = id
         freshGroupTask?.cancel()
         freshGroupTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_800_000_000)
+            try? await Task.sleep(nanoseconds: 800_000_000)
             guard !Task.isCancelled, freshGroupId == id else { return }
             freshGroupId = nil
         }
@@ -289,7 +359,7 @@ final class NotesListViewModel: ObservableObject {
         freshItemId = id
         freshItemTask?.cancel()
         freshItemTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_800_000_000)
+            try? await Task.sleep(nanoseconds: 800_000_000)
             guard !Task.isCancelled, freshItemId == id else { return }
             freshItemId = nil
         }
@@ -301,7 +371,7 @@ final class NotesListViewModel: ObservableObject {
 
         watchTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 200_000_000)
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
                 await MainActor.run {
                     self?.checkFinishedTimers()
                 }
@@ -313,7 +383,7 @@ final class NotesListViewModel: ObservableObject {
         let now = Date()
         var dueText: String?
         var dueIDs: [String] = []
-        for group in groups + dayGroups {
+        for group in groups {
             for item in group.items {
                 guard let timer = item.timer, !timer.reminded, timer.isFinished(at: now) else { continue }
                 repository.markTimerReminded(groupId: group.id, itemId: item.id)
@@ -325,10 +395,18 @@ final class NotesListViewModel: ObservableObject {
             }
         }
         if !dueIDs.isEmpty {
-            apply(repository.fetch())
+            var next = groups
+            for groupIndex in next.indices {
+                for itemIndex in next[groupIndex].items.indices {
+                    guard dueIDs.contains(next[groupIndex].items[itemIndex].id),
+                          var timer = next[groupIndex].items[itemIndex].timer else { continue }
+                    timer.reminded = true
+                    next[groupIndex].items[itemIndex].timer = timer
+                }
+            }
+            groups = next
             finishedItemIDs = dueIDs
             reminderText = dueText
-            publishWidgetSnapshot()
         }
         if !hasOpenTimer {
             watchTask?.cancel()
@@ -337,7 +415,7 @@ final class NotesListViewModel: ObservableObject {
     }
 
     private var hasOpenTimer: Bool {
-        (groups + dayGroups).contains { group in
+        groups.contains { group in
             group.items.contains { item in
                 guard let timer = item.timer else { return false }
                 return !timer.reminded

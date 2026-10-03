@@ -13,6 +13,7 @@ struct NameDrawer: View {
     @State private var text = ""
     @State private var confirmDiscard = false
     @State private var discard = false
+    @State private var didAutoFocus = false
     @FocusState private var isFocused: Bool
 
     private var trimmed: String {
@@ -40,6 +41,15 @@ struct NameDrawer: View {
                 .padding(.vertical, AppSpacing.rowVertical)
                 .background(appColors.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: AppSpacing.cardRadius, style: .continuous))
+                .background {
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onAppear { focusWhenWide(proxy.size.width) }
+                            .onChange(of: proxy.size.width) { _, width in
+                                focusWhenWide(width)
+                            }
+                    }
+                }
                 .onSubmit(confirm)
 
             Button(action: confirm) {
@@ -81,8 +91,16 @@ struct NameDrawer: View {
             if text.isEmpty {
                 text = suggested
             }
-            isFocused = true
         }
+    }
+
+    private func focusWhenWide(_ width: CGFloat) {
+        guard width > 0, !didAutoFocus else { return }
+        didAutoFocus = true
+        if text.isEmpty {
+            text = suggested
+        }
+        isFocused = true
     }
 
     private func confirm() {

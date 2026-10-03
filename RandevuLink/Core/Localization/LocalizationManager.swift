@@ -1,29 +1,17 @@
 import Foundation
 import SwiftUI
-import WidgetKit
 
 @MainActor
 final class LocalizationManager: ObservableObject {
-    private static let storageKey = "settings.language"
-
     @Published var language: AppLanguage {
         didSet {
             guard oldValue != language else { return }
-            UserDefaults.standard.set(language.rawValue, forKey: Self.storageKey)
-            var snapshot = WidgetSnapshotStore.load()
-            snapshot.language = language.rawValue
-            WidgetSnapshotStore.save(snapshot)
-            WidgetCenter.shared.reloadTimelines(ofKind: WidgetSnapshotStore.kind)
+            UserDefaults.standard.set(language.rawValue, forKey: AppLanguage.storageKey)
         }
     }
 
     init() {
-        if let stored = UserDefaults.standard.string(forKey: Self.storageKey),
-           let lang = AppLanguage(rawValue: stored) {
-            language = lang
-        } else {
-            language = .turkish
-        }
+        language = .stored
     }
 
     /// Secili dile ait .lproj bundle'i. Bulunamazsa ana bundle'a duser.

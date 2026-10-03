@@ -42,10 +42,12 @@ final class ToastCenter: ObservableObject {
 
     func updatePinned(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty, message != trimmed else { return }
 
         dismissTask?.cancel()
-        withAnimation(.spring(response: 0.38, dampingFraction: 0.86)) {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
             message = trimmed
         }
     }
@@ -90,6 +92,6 @@ struct ToastHost: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-        .animation(.spring(response: 0.38, dampingFraction: 0.86), value: toast.message)
+        .animation(.spring(response: 0.38, dampingFraction: 0.86), value: toast.message == nil)
     }
 }

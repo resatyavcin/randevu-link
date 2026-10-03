@@ -1,7 +1,7 @@
 import AVFoundation
 import Speech
 
-enum SpeechListenerError: Error {
+enum SpeechListenerError: Error, Sendable {
     case denied
     case unavailable
 }
@@ -11,8 +11,26 @@ final class SpeechListener: ObservableObject {
     @Published private(set) var transcript = ""
     @Published private(set) var failed = false
 
-    private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "tr-TR"))
-    private let engine = AVAudioEngine()
+    private var recognizer: SFSpeechRecognizer?
+
+    init(language: AppLanguage = .stored) {
+        recognizer = SFSpeechRecognizer(locale: language.speechLocale)
+    }
+
+    func use(language: AppLanguage) {
+        let locale = language.speechLocale
+        guard recognizer?.locale.identifier(.bcp47) != locale.identifier(.bcp47) else { return }
+        recognizer = SFSpeechRecognizer(locale: locale)
+        guard isListening else { return }
+        if recognizer?.isAvailable == true {
+            startRecognition()
+        } else {
+            stop()
+            failed = true
+        }
+    }
+
+    private let capture = Capture()
     private let feed = AudioFeed()
     private var task: SFSpeechRecognitionTask?
     private var isListening = false
@@ -24,30 +42,16 @@ final class SpeechListener: ObservableObject {
 
     func start() async throws {
         guard !isListening else { return }
-        failed = false
+        if failed {
+            failed = false
+        }
         guard await Self.requestPermissions() else { throw SpeechListenerError.denied }
         guard let recognizer, recognizer.isAvailable else { throw SpeechListenerError.unavailable }
 
-        let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.record, mode: .measurement, options: .duckOthers)
-        try session.setActive(true, options: .notifyOthersOnDeactivation)
-
-        let input = engine.inputNode
-        let format = input.outputFormat(forBus: 0)
-        guard format.sampleRate > 0, format.channelCount > 0 else {
-            try? session.setActive(false, options: .notifyOthersOnDeactivation)
-            throw SpeechListenerError.unavailable
-        }
-
-        Self.installTap(on: input, format: format, feed: feed)
-        engine.prepare()
-        do {
-            try engine.start()
-        } catch {
-            input.removeTap(onBus: 0)
-            try? session.setActive(false, options: .notifyOthersOnDeactivation)
-            throw error
-        }
+        // Session and engine startup block for a long time. Keep that off the
+        // main thread so a Listen redirect can render before recognition begins.
+        try await capture.activate(feed: feed)
+        await Task.yield()
 
         isListening = true
         failureCount = 0
@@ -73,9 +77,7 @@ final class SpeechListener: ObservableObject {
         task?.cancel()
         task = nil
         feed.finish()
-        engine.stop()
-        engine.inputNode.removeTap(onBus: 0)
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        capture.deactivate()
         clearText()
         return text
     }
@@ -131,7 +133,66 @@ final class SpeechListener: ObservableObject {
     private func clearText() {
         committed = ""
         partial = ""
+        guard !transcript.isEmpty else { return }
         transcript = ""
+    }
+
+    /// Audio session and engine work, serialized off the main thread.
+    private final class Capture: @unchecked Sendable {
+        private let engine = AVAudioEngine()
+        private let queue = DispatchQueue(label: "randevulink.speech.audio")
+
+        func activate(feed: AudioFeed) async throws {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
+                queue.async {
+                    do {
+                        try self.activateSync(feed: feed)
+                        continuation.resume()
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+        }
+
+        func deactivate() {
+            queue.async {
+                self.stopEngine()
+            }
+        }
+
+        private func stopEngine() {
+            engine.stop()
+            engine.inputNode.removeTap(onBus: 0)
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
+
+        private func activateSync(feed: AudioFeed) throws {
+            let session = AVAudioSession.sharedInstance()
+            do {
+                try session.setCategory(.record, mode: .measurement, options: .duckOthers)
+                try session.setActive(true, options: .notifyOthersOnDeactivation)
+            } catch {
+                throw SpeechListenerError.unavailable
+            }
+
+            let input = engine.inputNode
+            let format = input.outputFormat(forBus: 0)
+            guard format.sampleRate > 0, format.channelCount > 0 else {
+                try? session.setActive(false, options: .notifyOthersOnDeactivation)
+                throw SpeechListenerError.unavailable
+            }
+
+            SpeechListener.installTap(on: input, format: format, feed: feed)
+            engine.prepare()
+            do {
+                try engine.start()
+            } catch {
+                input.removeTap(onBus: 0)
+                try? session.setActive(false, options: .notifyOthersOnDeactivation)
+                throw SpeechListenerError.unavailable
+            }
+        }
     }
 
     private nonisolated static func join(_ lhs: String, _ rhs: String) -> String {
