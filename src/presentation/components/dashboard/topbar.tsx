@@ -1,16 +1,20 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
-import { ChevronDown, LogOut, Menu } from "lucide-react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { ArrowUpRight, ChevronDown, LogOut, Menu } from "lucide-react"
 import { DashboardThemeToggle } from "@/presentation/components/dashboard/theme-toggle"
+import { CoverBanner } from "@/presentation/components/profile/cover-banner"
+import { UserAvatar } from "@/presentation/components/ui/user-avatar"
+import { MOCK_BUSINESS } from "@/composition/business"
 import { BUSINESS_NAME } from "@/composition/config"
 import { authApi } from "@/composition/services"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/presentation/components/dashboard/panel-dropdown-menu"
 
 export function DashboardTopbar({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter()
-  const showBusinessHeader = false
+  const showBusinessHeader = usePathname() === "/booking-link"
   const [loggingOut, setLoggingOut] = React.useState(false)
   const [logoutError, setLogoutError] = React.useState<string | null>(null)
 
@@ -30,6 +34,16 @@ export function DashboardTopbar({ onMenuClick }: { onMenuClick: () => void }) {
   return (
     <header className={showBusinessHeader ? "px-4" : "mx-4 flex items-center gap-2 border-b border-border/60 pb-3"}>
       {!showBusinessHeader ? <button type="button" onClick={onMenuClick} aria-label="Panel menüsünü aç" className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-foreground hover:bg-accent"><Menu className="size-5" /></button> : null}
+      {showBusinessHeader ? (
+        <div className="relative">
+          <CoverBanner className="h-32 rounded-3xl sm:h-40" />
+          <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
+            <button type="button" onClick={onMenuClick} aria-label="Panel menüsünü aç" className="inline-flex size-9 items-center justify-center rounded-full bg-white/90 text-black shadow-sm"><Menu className="size-4" /></button>
+            <Link href="/booking" className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-white/90 px-3 text-xs font-medium text-black shadow-sm">Randevu sayfam <ArrowUpRight className="size-3.5" /></Link>
+          </div>
+          <UserAvatar src={MOCK_BUSINESS.avatar} alt={BUSINESS_NAME} className="absolute -bottom-7 left-1/2 size-20 -translate-x-1/2 border-4 border-background" />
+        </div>
+      ) : null}
       <div className={showBusinessHeader ? "relative pt-10 text-center" : "flex min-w-0 flex-1 items-center justify-end gap-2"}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

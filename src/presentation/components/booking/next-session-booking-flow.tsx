@@ -272,7 +272,7 @@ export function NextSessionBookingFlow({
                   Cep telefonu
                 </span>
                 <span className="flex items-center rounded-xl bg-muted/70 ring-1 ring-border/70 focus-within:ring-2 focus-within:ring-indigo/40">
-                  <span className="shrink-0 border-r border-border px-3 text-sm font-semibold">+90</span>
+                  <span className="flex h-12 shrink-0 items-center whitespace-nowrap border-r border-border px-3 text-sm font-semibold">+90</span>
                   <input
                     type="tel"
                     value={phone}

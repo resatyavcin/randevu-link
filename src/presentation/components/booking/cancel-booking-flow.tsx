@@ -40,7 +40,7 @@ const STEP_META: Record<
 }
 
 const fieldClass =
-  "h-12 w-full bg-transparent px-3.5 text-[15px] outline-none placeholder:text-muted-foreground/70"
+  "h-12 min-w-0 flex-1 bg-transparent px-3.5 text-[15px] outline-none placeholder:text-muted-foreground/70"
 
 const optionPress =
   "touch-manipulation select-none outline-none transition-[transform,opacity,background-color,border-color] duration-150 ease-out active:scale-[0.97] active:opacity-80 focus-visible:ring-2 focus-visible:ring-indigo/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -147,7 +147,7 @@ export function CancelBookingFlow({
         {step === "phone" ? (
           <div className="flex flex-col gap-4">
             <label className="relative flex items-center rounded-xl bg-muted/70 ring-1 ring-border/70 focus-within:ring-2 focus-within:ring-indigo/40">
-              <span className="pl-3.5 font-display text-sm font-semibold text-muted-foreground">
+              <span className="flex h-12 shrink-0 items-center whitespace-nowrap pl-3.5 font-display text-sm font-semibold text-muted-foreground">
                 +90
               </span>
               <input

@@ -18,6 +18,7 @@ import {
 import { BookingThemeScope } from "@/presentation/components/booking/booking-appearance"
 import { BookingStepDrawer } from "@/presentation/components/booking/booking-step-drawer"
 import { CancelBookingFlow } from "@/presentation/components/booking/cancel-booking-flow"
+import { GoogleReviews } from "@/presentation/components/booking/google-reviews"
 import { NextSessionBookingFlow } from "@/presentation/components/booking/next-session-booking-flow"
 import { DayStep, DetailsStep, ServiceStep, StaffStep, TimeStep } from "@/presentation/components/booking/booking-steps"
 import { fireBookingConfetti } from "@/presentation/lib/confetti"
@@ -528,6 +529,7 @@ export function BookingFlow({
               </p>
             </div>
           ) : null}
+          {!preview ? <GoogleReviews /> : null}
           {showRecent && recentBooking ? (
             <RecentBookingCard
               booking={recentBooking}

@@ -513,7 +513,7 @@ export function DetailsStep({
             Telefon
           </span>
           <span className="relative flex items-center rounded-xl bg-muted/70 ring-1 ring-border/70 focus-within:ring-2 focus-within:ring-indigo/40">
-            <span className="pl-3.5 font-display text-sm font-semibold text-muted-foreground">
+            <span className="flex h-12 shrink-0 items-center whitespace-nowrap pl-3.5 font-display text-sm font-semibold text-muted-foreground">
               +90
             </span>
             <input
@@ -524,7 +524,7 @@ export function DetailsStep({
               placeholder="5XX XXX XX XX"
               inputMode="tel"
               autoComplete="tel-national"
-              className="h-12 w-full bg-transparent px-3.5 text-[15px] outline-none placeholder:text-muted-foreground/70"
+              className="h-12 min-w-0 flex-1 bg-transparent px-3.5 text-[15px] outline-none placeholder:text-muted-foreground/70"
             />
           </span>
           {phone.length > 0 && !phoneValid ? (

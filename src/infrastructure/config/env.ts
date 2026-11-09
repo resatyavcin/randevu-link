@@ -51,7 +51,7 @@ export const BUSINESS_MAPS_DESTINATION = read(
 
 export const BUSINESS_AVATAR = read(
   process.env.NEXT_PUBLIC_BUSINESS_AVATAR,
-  ""
+  "/icons/icon.svg"
 )
 
 export const BUSINESS_VERIFIED = readBool(
@@ -61,7 +61,7 @@ export const BUSINESS_VERIFIED = readBool(
 
 export const BUSINESS_COVER_PHOTOS = readList(
   process.env.NEXT_PUBLIC_BUSINESS_COVER_PHOTOS,
-  []
+  ["/saloon.jpg"]
 )
 
 export const BUSINESS_INSTAGRAM = read(

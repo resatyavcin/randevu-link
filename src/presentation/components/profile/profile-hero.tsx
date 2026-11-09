@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { CoverBanner } from "@/presentation/components/profile/cover-banner"
+import { UserAvatar } from "@/presentation/components/ui/user-avatar"
 import { VerifiedBadge } from "@/presentation/components/ui/verified-badge"
 import { MOCK_BUSINESS } from "@/composition/business"
 import { cn } from "@/presentation/lib/utils"
@@ -58,13 +60,19 @@ export function ProfileHero({
 
   return (
     <div className={cn("relative px-4 pb-4", compact ? "pt-2" : "pt-3")}>
+      <CoverBanner className={compact ? "h-28 rounded-3xl" : "h-36 rounded-3xl sm:h-40"} />
       {actions}
       <div
         className={cn(
           "relative z-10 flex flex-col items-center gap-1",
-          compact ? "pt-2" : "pt-3"
+          compact ? "-mt-7" : "-mt-10"
         )}
       >
+        <UserAvatar
+          src={MOCK_BUSINESS.avatar}
+          alt={MOCK_BUSINESS.companyName}
+          className={cn("ring-[3px] ring-background", compact ? "size-14" : "size-20")}
+        />
         <div className="mt-3 flex justify-center px-2">
           {title}
         </div>
