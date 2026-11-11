@@ -2,13 +2,15 @@
 
 import { MapPin } from "lucide-react"
 import { cn } from "@/presentation/lib/utils"
-import { getDirectionsUrl, MOCK_BUSINESS } from "@/composition/business"
+import { getDirectionsUrl } from "@/composition/business"
+import { useSocialLinks } from "@/presentation/components/profile/social-links"
 
 const directionsClass =
-  "inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/72 px-3 py-1.5 font-display text-[13px] font-semibold tracking-[-0.01em] text-zinc-900 shadow-[0_8px_24px_rgb(0_0_0/0.16)] backdrop-blur-xl backdrop-saturate-150 transition-[background-color,transform,box-shadow] duration-150 hover:bg-white/88 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/30"
+  "inline-flex min-h-9 items-center gap-1.5 rounded-full bg-white/90 px-3 font-display text-xs font-medium text-black shadow-sm transition-colors hover:bg-white active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 
 export function DirectionsButton({ className }: { className?: string }) {
-  const destination = MOCK_BUSINESS.mapsDestination
+  const { location, locationPoint } = useSocialLinks()
+  const destination = locationPoint ? `${locationPoint.lat},${locationPoint.lng}` : location
 
   if (!destination.trim()) return null
 
@@ -19,7 +21,7 @@ export function DirectionsButton({ className }: { className?: string }) {
       rel="noopener noreferrer"
       className={cn(directionsClass, className)}
     >
-      <MapPin className="size-3.5 shrink-0" strokeWidth={2.4} aria-hidden />
+      <MapPin className="size-3.5 shrink-0" strokeWidth={1.6} aria-hidden />
       Yol tarifi al
     </a>
   )

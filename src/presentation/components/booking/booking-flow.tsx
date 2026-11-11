@@ -529,7 +529,6 @@ export function BookingFlow({
               </p>
             </div>
           ) : null}
-          {!preview ? <GoogleReviews /> : null}
           {showRecent && recentBooking ? (
             <RecentBookingCard
               booking={recentBooking}
@@ -537,6 +536,7 @@ export function BookingFlow({
               onCancel={cancelRecentBooking}
             />
           ) : null}
+          {!preview ? <GoogleReviews /> : null}
         </div>
       ) : null}
 

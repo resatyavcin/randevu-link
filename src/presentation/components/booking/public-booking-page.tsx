@@ -12,7 +12,7 @@ export function PublicBookingPage({
   const router = useRouter()
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background pt-[max(0.75rem,env(safe-area-inset-top))]">
+    <div className="flex h-full min-h-0 flex-col bg-background pt-3">
       {preview ? (
         <div className="flex items-center gap-2 px-4 pt-3">
           <button

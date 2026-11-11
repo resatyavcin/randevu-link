@@ -11,24 +11,43 @@ import { showUndoToast } from "@/presentation/lib/undo-toast"
 import { cn } from "@/presentation/lib/utils"
 
 export type BookingAppearance = {
+  badgeColor: string
   dark: boolean
   headerSrc: string | null
+  headerImages: string[]
+  headerIntervalSeconds: number
+  logoImages: string[]
+  logoIntervalSeconds: number
   logoSrc: string | null
 }
 
 type BookingAppearanceContextValue = BookingAppearance & {
+  setBadgeColor: (color: string) => boolean
   setDark: (dark: boolean) => void
   setHeaderSrc: (src: string | null) => void
-  setLogoSrc: (src: string | null) => void
+  setLogoImages: (images: string[]) => boolean
+  setLogoIntervalSeconds: (seconds: number) => void
+  setLogoSrc: (src: string | null) => boolean
+  setHeaderImages: (images: string[]) => boolean
+  setHeaderIntervalSeconds: (seconds: number) => void
 }
 
 const STORAGE_DARK = "randevu-link.booking-dark"
 const STORAGE_HEADER = "randevu-link.booking-header"
+const STORAGE_HEADERS = "randevu-link.booking-headers-v1"
+const STORAGE_INTERVAL = "randevu-link.booking-header-interval"
+const STORAGE_LOGOS = "randevu-link.booking-logos-v1"
+const STORAGE_LOGO_INTERVAL = "randevu-link.booking-logo-interval"
 const STORAGE_LOGO = "randevu-link.booking-logo"
 
 const DEFAULTS: BookingAppearance = {
+  badgeColor: "#fbbf24",
   dark: false,
   headerSrc: null,
+  headerImages: [],
+  headerIntervalSeconds: 5,
+  logoImages: [],
+  logoIntervalSeconds: 5,
   logoSrc: null,
 }
 
@@ -38,12 +57,31 @@ const BookingAppearanceContext =
 function readStored(): BookingAppearance {
   try {
     const dark = localStorage.getItem(STORAGE_DARK)
+    const seconds = Number(localStorage.getItem(STORAGE_INTERVAL) ?? 5)
     const headerSrc = localStorage.getItem(STORAGE_HEADER)
     const logoSrc = localStorage.getItem(STORAGE_LOGO)
+    let logoImages: string[] = []
+    try {
+      const stored: unknown = JSON.parse(localStorage.getItem(STORAGE_LOGOS) ?? "null")
+      if (Array.isArray(stored)) logoImages = stored.filter((item): item is string => typeof item === "string" && item.startsWith("data:image/")).slice(0, 5)
+    } catch { /* Preserve the previous logo. */ }
+    if (!logoImages.length && logoSrc?.startsWith("data:image/")) logoImages = [logoSrc]
+    const logoSeconds = Number(localStorage.getItem(STORAGE_LOGO_INTERVAL) ?? 5)
+    let headerImages: string[] = []
+    try {
+      const stored: unknown = JSON.parse(localStorage.getItem(STORAGE_HEADERS) ?? "null")
+      if (Array.isArray(stored)) headerImages = stored.filter((item): item is string => typeof item === "string" && item.startsWith("data:image/")).slice(0, 5)
+    } catch { /* Keep the legacy cover when the saved gallery cannot be read. */ }
+    if (!headerImages.length && headerSrc?.startsWith("data:image/")) headerImages = [headerSrc]
     return {
+      badgeColor: /^#[0-9a-f]{6}$/i.test(localStorage.getItem("randevu-link.badge-color") ?? "") ? localStorage.getItem("randevu-link.badge-color")! : DEFAULTS.badgeColor,
       dark: dark === "1" || dark === "true",
-      headerSrc: headerSrc && headerSrc.startsWith("data:") ? headerSrc : null,
-      logoSrc: logoSrc && logoSrc.startsWith("data:") ? logoSrc : null,
+      headerSrc: headerImages[0] ?? null,
+      headerImages,
+      headerIntervalSeconds: Number.isInteger(seconds) && seconds >= 2 && seconds <= 60 ? seconds : 5,
+      logoImages,
+      logoIntervalSeconds: Number.isInteger(logoSeconds) && logoSeconds >= 2 && logoSeconds <= 60 ? logoSeconds : 5,
+      logoSrc: logoImages[0] ?? null,
     }
   } catch {
     return DEFAULTS
@@ -113,9 +151,18 @@ export function BookingAppearanceProvider({
   }, [hydrated, theme.data, appearance.dark])
 
   const persistAssets = React.useCallback((assets: Partial<BookingAppearance>) => {
-    if ("headerSrc" in assets) writeKey(STORAGE_HEADER, assets.headerSrc ?? null)
-    if ("logoSrc" in assets) writeKey(STORAGE_LOGO, assets.logoSrc ?? null)
+    if ("badgeColor" in assets && !writeKey("randevu-link.badge-color", assets.badgeColor ?? null)) return false
+    if ("headerImages" in assets) {
+      if (!writeKey(STORAGE_HEADERS, JSON.stringify(assets.headerImages ?? []))) return false
+      writeKey(STORAGE_HEADER, null)
+    }
+    if ("headerSrc" in assets && !("headerImages" in assets) && !writeKey(STORAGE_HEADER, assets.headerSrc ?? null)) return false
+    if ("logoImages" in assets && !writeKey(STORAGE_LOGOS, JSON.stringify(assets.logoImages))) return false
+    if ("logoIntervalSeconds" in assets && !writeKey(STORAGE_LOGO_INTERVAL, String(assets.logoIntervalSeconds))) return false
+    if ("logoSrc" in assets && !writeKey(STORAGE_LOGO, assets.logoSrc ?? null)) return false
+    if ("headerIntervalSeconds" in assets && !writeKey(STORAGE_INTERVAL, String(assets.headerIntervalSeconds))) return false
     setPatch(prev => ({ ...prev, ...assets }))
+    return true
   }, [])
 
   const setDark = React.useCallback((dark: boolean) => {
@@ -130,8 +177,17 @@ export function BookingAppearanceProvider({
     () => ({
       ...appearance,
       setDark,
-      setHeaderSrc: (headerSrc) => persistAssets({ headerSrc }),
-      setLogoSrc: (logoSrc) => persistAssets({ logoSrc }),
+      setBadgeColor: (badgeColor) => /^#[0-9a-f]{6}$/i.test(badgeColor) && persistAssets({ badgeColor }),
+      setHeaderSrc: (headerSrc) => persistAssets({ headerSrc, headerImages: headerSrc ? [headerSrc] : [] }),
+      setHeaderImages: (headerImages) => persistAssets({ headerImages, headerSrc: headerImages[0] ?? null }),
+      setLogoSrc: (logoSrc) => persistAssets({ logoSrc, logoImages: logoSrc ? [logoSrc] : [] }),
+      setLogoImages: (logoImages) => persistAssets({ logoImages, logoSrc: logoImages[0] ?? null }),
+      setLogoIntervalSeconds: (seconds) => {
+        if (Number.isInteger(seconds) && seconds >= 2 && seconds <= 60) persistAssets({ logoIntervalSeconds: seconds })
+      },
+      setHeaderIntervalSeconds: (seconds) => {
+        if (Number.isInteger(seconds) && seconds >= 2 && seconds <= 60) persistAssets({ headerIntervalSeconds: seconds })
+      },
     }),
     [appearance, persistAssets, setDark]
   )

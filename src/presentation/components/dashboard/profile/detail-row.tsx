@@ -38,11 +38,11 @@ export function DetailRow({
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={className}>
+      <button data-slot="detail-row" type="button" onClick={onClick} className={className}>
         {content}
       </button>
     )
   }
 
-  return <div className={className}>{content}</div>
+  return <div data-slot="detail-row" className={className}>{content}</div>
 }

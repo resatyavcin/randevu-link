@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { useBookingAppearance } from "@/presentation/components/booking/booking-appearance"
 import { CoverBanner } from "@/presentation/components/profile/cover-banner"
 import { UserAvatar } from "@/presentation/components/ui/user-avatar"
-import { VerifiedBadge } from "@/presentation/components/ui/verified-badge"
+import { BusinessBadge } from "@/presentation/components/profile/business-badge"
 import { MOCK_BUSINESS } from "@/composition/business"
 import { cn } from "@/presentation/lib/utils"
 
@@ -24,6 +25,15 @@ export function ProfileHero({
   afterName,
   titleOnly = false,
 }: ProfileHeroProps) {
+  const { logoSrc, logoImages, logoIntervalSeconds } = useBookingAppearance()
+  const [logoIndex, setLogoIndex] = React.useState(0)
+  React.useEffect(() => {
+    if (logoImages.length < 2) return
+    const timer = window.setInterval(() => {
+      if (!document.hidden) setLogoIndex((previous) => (previous + 1) % logoImages.length)
+    }, logoIntervalSeconds * 1000)
+    return () => window.clearInterval(timer)
+  }, [logoImages.length, logoIntervalSeconds])
   const titleClass = cn(
     "max-w-full font-display font-extrabold leading-none tracking-[-0.02em]",
     titleOnly ? "text-left" : "text-center",
@@ -33,7 +43,7 @@ export function ProfileHero({
     <>
       {MOCK_BUSINESS.companyName}
       {!titleOnly && MOCK_BUSINESS.verified ? (
-        <VerifiedBadge className="ml-[0.28em] inline-flex size-[0.85em] align-middle" />
+        <BusinessBadge className="ml-[0.28em] inline-flex size-[0.85em] align-middle" />
       ) : null}
     </>
   )
@@ -60,7 +70,7 @@ export function ProfileHero({
 
   return (
     <div className={cn("relative px-4 pb-4", compact ? "pt-2" : "pt-3")}>
-      <CoverBanner className={compact ? "h-28 rounded-3xl" : "h-36 rounded-3xl sm:h-40"} />
+      <CoverBanner className="rounded-3xl" />
       {actions}
       <div
         className={cn(
@@ -69,7 +79,7 @@ export function ProfileHero({
         )}
       >
         <UserAvatar
-          src={MOCK_BUSINESS.avatar}
+          src={logoImages[logoIndex % Math.max(1, logoImages.length)] ?? logoSrc ?? MOCK_BUSINESS.avatar}
           alt={MOCK_BUSINESS.companyName}
           className={cn("ring-[3px] ring-background", compact ? "size-14" : "size-20")}
         />

@@ -5,8 +5,10 @@ import { cn } from "@/presentation/lib/utils"
 
 export function VerifiedBadge({
   className,
+  color = "#fbbf24",
 }: {
   className?: string
+  color?: string
 }) {
   return (
     <span
@@ -14,10 +16,11 @@ export function VerifiedBadge({
         "verified-badge relative inline-flex size-6 shrink-0",
         className
       )}
+      style={{ color, filter: `drop-shadow(0 0 4px ${color}73)` }}
       aria-label="Doğrulanmış işletme"
     >
       <BadgeCheck
-        className="size-full text-amber-400"
+        className="size-full"
         fill="currentColor"
         stroke="white"
         strokeWidth={1.5}

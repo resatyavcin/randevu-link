@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { BUSINESS_NAME } from "@/composition/config"
 import { Star } from "lucide-react"
 import { cn } from "@/presentation/lib/utils"
 
@@ -100,7 +101,7 @@ export function GoogleReviews({ className }: { className?: string }) {
         <div className="flex items-center gap-2 text-muted-foreground">
           <GoogleLogo className="size-3.5" aria-hidden />
           <p className="font-display text-[12px] font-semibold tracking-tight">
-            Google yorumları · Demo
+            Google yorumları · {BUSINESS_NAME}
           </p>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

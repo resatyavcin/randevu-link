@@ -45,7 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <BookingThemeScope
         data-vaul-drawer-wrapper=""
-        className="relative h-dvh overflow-hidden"
+        className="relative h-dvh overflow-hidden pt-[env(safe-area-inset-top)]"
       >
         {frame}
       </BookingThemeScope>
@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div
       data-vaul-drawer-wrapper=""
-      className="relative h-dvh overflow-hidden bg-background"
+      className="relative h-dvh overflow-hidden pt-[env(safe-area-inset-top)] bg-background"
     >
       {frame}
     </div>

@@ -35,16 +35,16 @@ const GENDER_TABS: {
     label: "Kadın",
     icon: Venus,
     selected:
-      "bg-background text-rose-700 shadow-sm ring-1 ring-black/5 dark:text-rose-300",
-    idle: "text-rose-500/70 hover:text-rose-700 dark:text-rose-400/70 dark:hover:text-rose-300",
+      "bg-background text-black shadow-sm ring-1 ring-black/5",
+    idle: "text-black",
   },
   {
     id: "ERKEK",
     label: "Erkek",
     icon: Mars,
     selected:
-      "bg-background text-sky-700 shadow-sm ring-1 ring-black/5 dark:text-sky-300",
-    idle: "text-sky-500/70 hover:text-sky-700 dark:text-sky-400/70 dark:hover:text-sky-300",
+      "bg-background text-black shadow-sm ring-1 ring-black/5",
+    idle: "text-black",
   },
 ]
 

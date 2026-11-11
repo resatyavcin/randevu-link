@@ -9,7 +9,7 @@ function AraContent() {
   const initialQuery = searchParams.get("q") ?? ""
 
   return (
-    <main className="flex flex-col gap-4 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
+    <main className="flex flex-col gap-4 px-4 pt-4 pb-4">
       <div className="flex flex-col gap-1 pt-4">
         <h1 className="font-display text-2xl font-bold tracking-tight">
           İşletme ara
@@ -27,7 +27,7 @@ export default function SearchPageClient() {
   return (
     <Suspense
       fallback={
-        <main className="flex flex-col gap-4 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
+        <main className="flex flex-col gap-4 px-4 pt-4 pb-4">
           <div className="flex flex-col gap-1 pt-4">
             <h1 className="font-display text-2xl font-bold tracking-tight">
               İşletme ara

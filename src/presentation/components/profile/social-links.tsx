@@ -24,6 +24,7 @@ export type SocialLinks = {
   instagram: string
   whatsapp: string
   location: string
+  locationPoint?: { lat: number; lng: number }
   website: string
 }
 
@@ -33,6 +34,7 @@ type SocialLinksContextValue = SocialLinks & {
   setInstagram: (value: string) => void
   setWhatsapp: (value: string) => void
   setLocation: (value: string) => void
+  setLocationSelection: (label: string, point: { lat: number; lng: number }) => void
   setWebsite: (value: string) => void
   instagramUrl: string | null
   whatsappUrl: string | null
@@ -112,6 +114,8 @@ function readStored(): SocialLinks {
           : DEFAULTS.whatsapp,
       location:
         typeof parsed.location === "string" ? parsed.location.trim() : "",
+      locationPoint: parsed.locationPoint && Number.isFinite(parsed.locationPoint.lat) && Number.isFinite(parsed.locationPoint.lng) && Math.abs(parsed.locationPoint.lat) <= 90 && Math.abs(parsed.locationPoint.lng) <= 180
+        ? parsed.locationPoint : undefined,
       website:
         typeof parsed.website === "string"
           ? normalizeWebsite(parsed.website)
@@ -142,7 +146,8 @@ export function SocialLinksProvider({
       ...links,
       setInstagram: (instagram) => persist({ instagram }),
       setWhatsapp: (whatsapp) => persist({ whatsapp }),
-      setLocation: (location) => persist({ location }),
+      setLocation: (location) => persist({ location, locationPoint: undefined }),
+      setLocationSelection: (location, locationPoint) => persist({ location, locationPoint }),
       setWebsite: (website) => persist({ website }),
       instagramUrl: links.instagram
         ? `https://www.instagram.com/${links.instagram}`
@@ -185,7 +190,7 @@ const COPY: Record<
   },
   location: {
     title: "Konum",
-    description: "Kaydedilir. Yol tarifi şimdilik sabit, buraya bağlanacak.",
+    description: "İşletme adresin randevu sayfasındaki yol tarifi bağlantısında kullanılır.",
     placeholder: "İşletme adresi",
   },
   website: {
