@@ -44,7 +44,7 @@ export function seedDatabase(): DemoDatabase {
     id: `service-${i + 1}`, name, category: categories[cat], roleIds: [roles[role].id],
     roles: [roles[role]], durationMin, priceTl, priceMaxTl: null, active: true,
   }))
-  const staff: StaffDto[] = [["Reşat Berber", "resat", 1], ["Elif Demir", "elif", 0], ["Selin Kaya", "selin", 2], ["Mert Yılmaz", "mert", 1], ["Deniz Aydın", "deniz", 0]].map(([name, , role], i) => {
+  const staff: StaffDto[] = [["Reşat Yavçin", "resat", 1], ["Elif Demir", "elif", 0], ["Selin Kaya", "selin", 2], ["Mert Yılmaz", "mert", 1], ["Deniz Aydın", "deniz", 0]].map(([name, , role], i) => {
     const r = roles[Number(role)]
     return { id: `staff-${i + 1}`, name: String(name), roleId: r.id, role: r.name, roleCode: r.code, roleActive: true,
       phone: `00000000${String(i + 1).padStart(2, "0")}`, photoUrl: null, workDays: [1, 2, 3, 4, 5, 6, 0],

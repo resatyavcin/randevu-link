@@ -50,7 +50,7 @@ export function getStoredMe(scope: AuthScope): AuthMe | null {
   if (!raw) return null
   try {
     const me = JSON.parse(raw) as AuthMe
-    if (me.name === "Ali Yıldız") me.name = "Reşat Berber"
+    if (["Ali Yıldız", "Reşat Berber"].includes(me.name)) me.name = "Reşat Yavçin"
     me.photoUrl = null
     return me
   } catch {

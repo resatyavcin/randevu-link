@@ -25,7 +25,7 @@ function db() {
         saved.appointments.forEach((row) => { row.customerPhone = anonymize(row.customerPhone) })
         saved.sessions.forEach((row) => { row.customerPhone = anonymize(row.customerPhone) })
         saved.charges.forEach((row) => { row.customerPhone = anonymize(row.customerPhone) })
-        const rename = (name: string) => name === "Ali Yıldız" ? "Reşat Berber" : name
+        const rename = (name: string) => ["Ali Yıldız", "Reşat Berber"].includes(name) ? "Reşat Yavçin" : name
         saved.staff.forEach((row) => { row.name = rename(row.name); row.photoUrl = null })
         saved.appointments.forEach((row) => {
           if (row.staffName) row.staffName = rename(row.staffName)

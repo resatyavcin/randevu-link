@@ -21,12 +21,12 @@ function readBool(value: string | undefined, fallback: boolean) {
 /** Short public name (sidebar, footer, topbar). */
 export const BUSINESS_NAME = read(
   process.env.NEXT_PUBLIC_BUSINESS_NAME,
-  "Reşat Berber"
+  "Reşat Yavçin"
 )
 
 export const BUSINESS_COMPANY_NAME = read(
   process.env.NEXT_PUBLIC_BUSINESS_COMPANY_NAME,
-  "Reşat Berber"
+  "Reşat Yavçin"
 )
 
 export const BUSINESS_SLUG = read(
@@ -36,7 +36,7 @@ export const BUSINESS_SLUG = read(
 
 export const BUSINESS_INITIALS = read(
   process.env.NEXT_PUBLIC_BUSINESS_INITIALS,
-  "RB"
+  "RY."
 )
 
 export const BUSINESS_LOCATION = read(

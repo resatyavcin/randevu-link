@@ -124,7 +124,7 @@ export function StaffEditor({
                 id="st-name"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="ör. Reşat Berber"
+                placeholder="ör. Reşat Yavçin"
               />
             </div>
             <div className="flex flex-col gap-1.5">
