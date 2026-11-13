@@ -36,7 +36,7 @@ export const BUSINESS_SLUG = read(
 
 export const BUSINESS_INITIALS = read(
   process.env.NEXT_PUBLIC_BUSINESS_INITIALS,
-  "RY."
+  "RY"
 )
 
 export const BUSINESS_LOCATION = read(
