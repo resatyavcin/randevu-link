@@ -11,10 +11,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Architecture rules
 
-- Preserve the `domain`, `application`, `infrastructure`, `composition`, `presentation`, and Next.js `app` boundaries.
-- Keep domain rules and application use cases independent of packages, browser globals, and storage.
-- Define repository contracts in `application/ports`; implement adapters in `infrastructure` and wire them in `composition`.
-- Import application entry points from `composition` in presentation code. Do not import infrastructure directly from screens or routes.
-- Keep query/cache state in presentation hooks and route-specific view content in `presentation/views`.
+- Keep the structure small: `app`, `components`, `lib`, `data`, and `types`.
+- `app` contains Next.js route entries. Page content lives in `components/booking`, `components/booking-link`, `components/budget`, and `components/showcase`.
+- Keep shared UI in `components/ui`, profile UI in `components/profile`, and app wrappers in `components/layout` and `components/providers`.
+- Keep helpers and shared configuration in `lib`, and external data access in `data`. Appearance preferences stay in local browser storage.
+- Booking buttons open empty drawers; do not restore demo booking flows or data.
+- Preserve `components/booking/service-picker.tsx`, `google-reviews.tsx`, and `kvkk-link.tsx` as reusable UI; preview them on `/ui`. Keep their data/content supplied by props.
+- Show business cover, avatar, and profile header only on `/booking` and `/booking-link`. Other pages use the plain menu header in `components/layout/panel-shell.tsx`.
+- Shared TypeScript contracts live in `types`; they must not import UI or data access code.
+- Do not reintroduce domain/application/infrastructure/composition wrappers for simple forwarding.
 - Run `pnpm check` after changes. Use `pnpm build` for routing or bundling changes.
-- See `docs/architecture.md` for dependency directions and `docs/migration-map.json` for previous source locations.
+- See `docs/architecture.md` for the structure and `docs/migration-map.json` for previous source locations.

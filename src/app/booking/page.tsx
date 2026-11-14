@@ -1,18 +1,18 @@
 import type { Metadata } from "next"
-import { PublicBookingPage } from "@/presentation/components/booking/public-booking-page"
-import { MOCK_BUSINESS } from "@/composition/business"
+import { BookingView } from "@/components/booking/booking-view"
+import { BUSINESS } from "@/lib/business"
 
 type PageProps = {
   searchParams: Promise<{ preview?: string }>
 }
 
 export const metadata: Metadata = {
-  title: MOCK_BUSINESS.companyName,
-  description: `${MOCK_BUSINESS.companyName} — online randevu`,
+  title: BUSINESS.companyName,
+  description: `${BUSINESS.companyName} — online randevu`,
 }
 
 export default async function BookingPage({ searchParams }: PageProps) {
   const query = await searchParams
   const preview = query.preview === "1"
-  return <PublicBookingPage preview={preview} />
+  return <BookingView preview={preview} />
 }

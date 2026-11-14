@@ -4,12 +4,12 @@ import ts from "typescript"
 
 const root = resolve("src")
 const allowed = {
-  domain: ["domain"],
-  application: ["application", "domain"],
-  infrastructure: ["infrastructure", "application", "domain"],
-  presentation: ["presentation", "application", "domain", "composition"],
-  composition: ["composition", "infrastructure", "application", "domain", "presentation"],
-  app: ["app", "presentation", "composition", "application", "domain"],
+  types: ["types"],
+  lib: ["lib", "types"],
+  data: ["data", "lib", "types"],
+  hooks: ["hooks", "data", "lib", "types"],
+  components: ["components", "hooks", "data", "lib", "types"],
+  app: ["app", "components", "hooks", "data", "lib", "types"],
 }
 const walk = (directory) => readdirSync(directory, { withFileTypes: true }).flatMap((entry) =>
   entry.isDirectory() ? walk(resolve(directory, entry.name)) : [resolve(directory, entry.name)],
@@ -34,7 +34,7 @@ for (const file of files) {
       if (node.arguments[0] && ts.isStringLiteral(node.arguments[0])) imports.push(node.arguments[0].text)
       else errors.push(`${name}: computed module loading cannot be checked`)
     }
-    if (["domain", "application"].includes(layer) && ts.isIdentifier(node) && ["window", "document", "localStorage", "sessionStorage", "fetch", "process"].includes(node.text)) {
+    if (layer === "types" && ts.isIdentifier(node) && ["window", "document", "localStorage", "sessionStorage", "fetch", "process"].includes(node.text)) {
       errors.push(`${name}: ${node.text} belongs in an outer layer`)
     }
     ts.forEachChild(node, visit)
@@ -43,7 +43,7 @@ for (const file of files) {
   const edges = []
   for (const specifier of imports) {
     if (!specifier.startsWith("@/") && !specifier.startsWith(".")) {
-      if (["domain", "application"].includes(layer)) errors.push(`${name}: external dependency ${specifier}`)
+      if (layer === "types") errors.push(`${name}: external dependency ${specifier}`)
       continue
     }
     const base = specifier.startsWith("@/") ? resolve(root, specifier.slice(2)) : resolve(dirname(file), specifier)

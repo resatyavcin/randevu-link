@@ -1,62 +1,65 @@
-# Mimari ve taşıma kapsamı
+# Proje yapısı
 
-## Bağımlılık yönü
+```text
+src/
+  app/           Next.js sayfaları, layout, stiller ve service worker
+  components/    booking, booking-link, budget, showcase, profile, ui, layout, providers
+  lib/           Yardımcılar, işletme ayarları ve tarayıcı tercihleri
+  data/          Adres araması ve yerel bütçe kayıtları
+  types/         Ortak işletme ve konum tipleri
+public/
+  fonts/         Yerel yazı tipleri ve OFL lisansları
+```
 
-| Katman | İçe aktarabileceği katmanlar |
-| --- | --- |
-| domain | domain |
-| application | application, domain |
-| infrastructure | infrastructure, application, domain |
-| presentation | presentation, application, domain, composition |
-| composition | Bağımlılıkları bağlamak için tüm uygulama katmanları |
-| app | app, presentation, composition, application, domain |
+`/booking` işletme profilini ve üç işlem düğmesini gösterir. Düğmeler yalnızca
+başlık ve kapatma düğmesi içeren bir drawer açar. Randevu oluşturma, seans,
+iptal akışı, örnek yorumlar ve demo veri kaynağı yoktur.
 
-Domain ve application dış paket, tarayıcı deposu veya framework kullanamaz.
-Composition, uygulamanın somut bağımlılıklarını seçen giriş noktasıdır.
-`scripts/check-architecture.mjs` statik içe aktarımları, yeniden dışa aktarımları,
-sabit yollarla dinamik yüklemeleri, katman sınırlarını ve bağımlılık döngülerini
-denetler. Test dosyaları, birden fazla katmanı doğrulayabildiği için bu grafiğin
-dışındadır. TypeScript ayrıca sözleşmeleri ve repository uygulamalarını denetler.
+`/booking-link` profil ve görünüm ayarlarını içerir. Tercihler doğrudan tarayıcıda
+saklanır; sorgu önbelleği veya servis katmanı kullanılmaz. Menü dört sayfayı açar.
 
-## Taşınan parçalar
+`/budget` gelir/gider hareketlerini listeler. Kayıtlar `data/budget.ts` üzerinden
+tarayıcıda saklanır; tutarlar tam sayı kuruş cinsindedir. Tarih, açıklama ve tutar
+ile işlem eklenebilir. Aylar arasında geçiş yapılabilir; toplamlar ve hareketler seçili
+aya aittir. Silme yalnızca seçim modunda, modalda `onaylıyorum` yazılarak yapılır. Sabit gelir/giderler başlangıç ve bitiş ayı dahil aylık hesaplanır; gelecek aylar
+hareketlere ve toplamlara dahil edilmez. Tekrarlı kayıtlar bir kez saklanır,
+sabit işlemler silme seçiminden korunur. Tarih, ay ve tutar seçimi iç içe drawer
+bileşenlerinden yapılır; sabit işlem için ayrı ekleme düğmesi bulunur. Örnek finansal veri eklenmez.
 
-| Önceki konum | Yeni sorumluluk / konum |
-| --- | --- |
-| `src/lib/api-types.ts` | `domain/models/contracts.ts`: mevcut veri modelleri ve sabitleri |
-| `src/lib/auth.ts` | `domain/models/auth.ts`: oturum tipleri; `infrastructure/storage/auth-session.ts`: tarayıcı deposu |
-| `src/lib/phone.ts` | `domain/value-objects/phone.ts` |
-| `src/lib/business.ts` | `domain/models/business.ts`, `domain/services/business-directory.ts`, `composition/business.ts`, `presentation/lib/navigation.ts` |
-| `src/lib/api-client.ts` | `composition/services.ts`: repository'leri application işlemlerine bağlama |
-| `src/lib/data/services/*` | `application/ports/*`: 16 sözleşme; `infrastructure/repositories/*`: somut uygulamalar |
-| `src/lib/data/transport.ts` | `infrastructure/transport/demo-transport.ts`; ortak hata `application/errors/api-error.ts` |
-| `src/lib/data/customer-history.ts` | Veri toplama `application/use-cases/customer-history.ts`, kurallar `domain/services/customer-history.ts`, sorgu `presentation/hooks/customer-history.ts` |
-| Diğer `src/lib/data/*` | `presentation/hooks/*`: TanStack Query sorgu ve kayıt durumları |
-| `src/lib/appointments-store.ts` | `presentation/hooks/appointments.ts`: ekran modeli eşlemesi ve sorgular |
-| `src/lib/demo/*` | `infrastructure/demo/*`: yerel sunucu benzetimi, başlangıç verileri ve entegrasyon testleri |
-| `src/lib/env.ts` | `infrastructure/config/env.ts`, dışa açılan giriş `composition/config.ts` |
-| Diğer `src/lib/*` | `presentation/lib/*`: bildirimler, biçimleme, animasyon ve arayüz yardımcıları |
-| `src/components/*` | `presentation/components/*`: tüm bileşenler ve sağlayıcılar |
-| `src/app/**/*-view.tsx`, `search-client.tsx` | `presentation/views/*` |
-| Next.js dosyaları | `src/app` içinde aynı URL yapısı, yönlendirmeler, metadata, offline sayfası ve service worker |
+`components/booking/service-picker.tsx` görsel tasarım için özellikle korunur:
+`GenderSelector`, `ServiceCategory`, `ServicePicker`. Bileşenler içeriklerini
+props ile alır; içinde demo veri veya API çağrısı yoktur. Kullanıcı Arayüzü sayfasında örneklerle gösterilirler.
 
-Görseller, ikonlar, favicon, salon fotoğrafları, stiller, doğrulama akışları,
-tema ve görünüm tercihleri, sosyal bağlantılar, tablo tercihleri, sorgu anahtarları,
-formlar, yerel veri anahtarları ve demo senaryoları korunmuştur. Proje klasörü
-bütün olarak yeniden adlandırıldığı için gizli ortam dosyaları ve yerel proje
-ayarları da taşınmıştır. Git deposu üst klasörde kalır; mevcut Git değişiklikleri
-stage edilmemiş veya sıfırlanmamıştır.
+`lib` arayüz veya veri modüllerini içe aktarmaz. `types` yalnızca diğer tip
+dosyalarına bağımlıdır. `scripts/check-architecture.mjs` bağımlılık yönlerini,
+eksik yolları ve döngüleri kontrol eder.
 
-## Veri erişimini değiştirme
+`pnpm check` yapı, tip, lint ve bütçe hesaplama testlerini çalıştırır. Kaldırılan demo akışlarına
+ait testler de kaldırılmıştır. `pnpm build` üretim derlemesini doğrular.
+Yazı tipleri `next/font/local` ile yerel dosyalardan yüklenir.
 
-Mevcut repository'ler `demo-transport.ts` üzerinden yerel sunucu benzetimine
-gider. Bu benzetim randevu çakışması, ödeme ve seans işlemlerinin mevcut demo
-davranışını korur. Gerçek bir sunucu eklemek için `application/ports` sözleşmelerini
-uygulayan yeni infrastructure adaptörleri yazın ve bunları `composition/services.ts`+içinde seçin. Domain, kullanım senaryoları ve ekranların repository uygulamasını
-bilmesi gerekmez. Mevcut DTO isimleri sözleşme uyumluluğu için korunmuştur.
+`docs/migration-map.json` eski dosyaları güncel konumlarına eşler.
 
-## Doğrulama
+`components/booking/google-reviews.tsx` Google yorum kartıdır; gerçek yorum, puan ve
+link props ile verilir. `kvkk-link.tsx` altı çizili düğme ve KVKK drawer içerir;
+metin children ile verilir. Bileşenler örnek veri veya hukuki metin içermez; önizleme içerikleri yalnızca
+Kullanıcı Arayüzü sayfasında tanımlıdır. Drawer içinde kullanım için `nested` desteklenir.
 
-`pnpm check` katman kontrollerini, tip kontrolünü, lint denetimini, bağımsız
-kullanım senaryosu testlerini ve mevcut demo akış testlerini çalıştırır.
-`pnpm build` ayrıca Next.js yollarının üretim derlemesini doğrular. İlk derlemede
-`next/font/google` tarafından kullanılan fontların indirilmesi gerekebilir.
+`/ui` Kullanıcı Arayüzü sayfasıdır. Hizmet seçimi, Google yorum kartı, KVKK
+bağlantısı ve iç içe drawer örneklerini gösterir. Butonlar, bütçe tutar/tarih/ay alanları ve kategori menüsü ile kart seçimini içeren
+işlem listesi de burada denenebilir. Örnek bütçe içerikleri yalnızca önizlemede tutulur.
+Önizlemeler kayıt oluşturmaz.
+`components/layout/panel-shell.tsx` ortak menü ve sayfa çerçevesidir. Kapak ve
+avatar varsayılan olarak kapalıdır; yalnızca `/booking-link` bu çerçevede
+`businessHeader` seçeneğini açar. `/booking` kendi profil başlığını kullanır.
+Bütçe, arayüz ve bulunamadı sayfaları sade menü başlığıyla açılır.
+
+Bütçede kategori ve ekstre tanımları ile ay bazında birikim tercihleri ayrı bir
+sürüm anahtarıyla `data/budget.ts` üzerinden saklanır. Eski işlem kayıtları
+kategori olmadan okunmaya devam eder. Ekstre tutarını güncellemek aynı ayın
+kaydını değiştirir; ikinci kez gidere eklemez. Sabit kayıtlarda bitiş ayı boş
+bırakılabilir ve ad, tutar, aralık düzenlenebilir. Düzenleme tüm geçerli aylara
+uygulanır. Arama, kategori filtresi, tarih/tutar sıralaması ve günlük gruplama
+aylık toplamları değiştirmez. Birikim tutarı gider oluşturmaz; harcanabilir
+bakiyeden ayrılır. Ay dökümü hesap kalemlerini gösterir. Silme yalnızca mevcut
+seçim ve metin onayıyla yapılır; Sarraf'ın kaydırarak silme akışı kullanılmaz.

@@ -1,12 +1,12 @@
 import type { MetadataRoute } from "next"
-import { BUSINESS_NAME } from "@/composition/config"
+import { BUSINESS_NAME } from "@/lib/config"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: BUSINESS_NAME,
     short_name: BUSINESS_NAME,
     description: `${BUSINESS_NAME} — randevu yönetimi`,
-    start_url: "/",
+    start_url: "/booking-link",
     display: "standalone",
     orientation: "portrait",
     background_color: "#121212",

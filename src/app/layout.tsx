@@ -1,31 +1,34 @@
 import type { Metadata, Viewport } from "next"
-import { Geist_Mono, Inter, Plus_Jakarta_Sans } from "next/font/google"
+import localFont from "next/font/local"
 import Script from "next/script"
-import { SerwistProvider } from "@/presentation/components/providers/serwist-provider"
-import { QueryProvider } from "@/presentation/components/providers/query-provider"
-import { ThemeProvider } from "@/presentation/components/providers/theme-provider"
-import { BookingAppearanceProvider } from "@/presentation/components/booking/booking-appearance"
-import { HeaderThemeProvider } from "@/presentation/components/profile/header-theme-picker"
-import { SocialLinksProvider } from "@/presentation/components/profile/social-links"
-import { AppShell } from "@/presentation/components/layout/app-shell"
-import { Toaster } from "@/presentation/components/ui/sonner"
-import { BUSINESS_NAME } from "@/composition/config"
+import { SerwistProvider } from "@/components/providers/serwist-provider"
+import { ThemeProvider } from "@/components/providers/theme-provider"
+import { BookingAppearanceProvider } from "@/components/booking/booking-appearance"
+import { SocialLinksProvider } from "@/components/profile/social-links"
+import { AppShell } from "@/components/layout/app-shell"
+import { Toaster } from "@/components/ui/sonner"
+import { BUSINESS_NAME } from "@/lib/config"
 import "@/app/globals.css"
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "../../public/fonts/geist-mono.ttf",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "100 900",
+  display: "swap",
 })
 
-const jakarta = Plus_Jakarta_Sans({
+const jakarta = localFont({
+  src: "../../public/fonts/plus-jakarta-sans.ttf",
   variable: "--font-jakarta",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "200 800",
+  display: "swap",
 })
 
-const inter = Inter({
+const inter = localFont({
+  src: "../../public/fonts/inter.ttf",
   variable: "--font-inter",
-  subsets: ["latin", "latin-ext"],
+  weight: "100 900",
+  display: "swap",
 })
 
 const APP_NAME = BUSINESS_NAME
@@ -81,20 +84,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full bg-background text-foreground">
-        <QueryProvider>
         <ThemeProvider defaultTheme="dark">
           <BookingAppearanceProvider>
-            <HeaderThemeProvider>
-              <SocialLinksProvider>
-                <SerwistProvider swUrl="/serwist/sw.js">
-                  <AppShell>{children}</AppShell>
-                </SerwistProvider>
-              </SocialLinksProvider>
-            </HeaderThemeProvider>
+            <SocialLinksProvider>
+              <SerwistProvider swUrl="/serwist/sw.js">
+                <AppShell>{children}</AppShell>
+              </SerwistProvider>
+            </SocialLinksProvider>
           </BookingAppearanceProvider>
           <Toaster />
         </ThemeProvider>
-        </QueryProvider>
       </body>
     </html>
   )
