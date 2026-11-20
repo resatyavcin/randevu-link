@@ -16,6 +16,7 @@ import {
 } from "@/components/budget/budget-fields";
 import {
   formatMoney,
+  isValidMonth,
   monthBreakdown,
   parseAmount,
 } from "@/lib/budget";
@@ -280,10 +281,10 @@ export function BudgetSummary({
                 Ay dökümü
               </Dialog.Title>
               <p className="text-sm capitalize text-muted-foreground">
-                {new Intl.DateTimeFormat("tr-TR", {
+                {isValidMonth(month) ? new Intl.DateTimeFormat("tr-TR", {
                   month: "long",
                   year: "numeric",
-                }).format(new Date(`${month}-01T12:00:00`))}
+                }).format(new Date(`${month}-01T12:00:00`)) : "Ay seçilmedi"}
               </p>
               <Dialog.Description className="sr-only">
                 Seçili ayın gelir, gider, birikim ve harcanabilir kalan dökümü.
