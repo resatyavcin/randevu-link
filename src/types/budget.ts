@@ -12,9 +12,6 @@ export type BudgetEntry = {
 export type BudgetCategory = {
   id: string
   name: string
-  kind: "custom" | "statement"
-  startMonth: string
-  endMonth: string
 }
 
 export type BudgetPreferences = {

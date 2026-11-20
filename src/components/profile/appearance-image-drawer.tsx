@@ -21,18 +21,7 @@ export function AppearanceImageDrawer({ kind, onClose }: { kind: "header" | "log
   const [area, setArea] = React.useState<CropArea | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState("")
-  const [coverAspect, setCoverAspect] = React.useState(COVER_ASPECT)
-  React.useEffect(() => {
-    if (kind !== "header") return
-    const banner = document.querySelector("[data-cover-banner]")
-    if (!banner) return
-    const observer = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      if (width && height) setCoverAspect(width / height)
-    })
-    observer.observe(banner)
-    return () => observer.disconnect()
-  }, [kind])
+  const coverAspect = COVER_ASPECT
   const input = React.useRef<HTMLInputElement>(null)
   const title = kind === "header" ? "Kapak görselleri" : "İşletme logosu"
   const limit = MAX_COVERS

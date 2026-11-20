@@ -4,7 +4,6 @@ import * as React from "react"
 import { useBookingAppearance } from "@/components/booking/booking-appearance"
 import { CoverBanner } from "@/components/profile/cover-banner"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { BusinessBadge } from "@/components/profile/business-badge"
 import { BUSINESS } from "@/lib/business"
 import { cn } from "@/lib/utils"
 
@@ -14,7 +13,7 @@ type ProfileHeroProps = {
   heading?: "h1" | "h2"
   actions?: React.ReactNode
   afterName?: React.ReactNode
-  /** Company name only — no banner, avatar, or verified badge. */
+  /** Company name only — no banner or avatar. */
   titleOnly?: boolean
 }
 
@@ -39,14 +38,7 @@ export function ProfileHero({
     titleOnly ? "text-left" : "text-center",
     compact ? "text-xl" : "text-[1.65rem]"
   )
-  const titleContent = (
-    <>
-      {BUSINESS.companyName}
-      {!titleOnly && BUSINESS.verified ? (
-        <BusinessBadge className="ml-[0.28em] inline-flex size-[0.85em] align-middle" />
-      ) : null}
-    </>
-  )
+  const titleContent = BUSINESS.companyName
   const title =
     heading === "h1" ? (
       <h1 className={titleClass}>{titleContent}</h1>

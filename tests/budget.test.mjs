@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { parseAmount, budgetTotals, isValidDate, entriesForMonth, removeMonthEntries, categoryActive, selectBudgetEntries, monthBreakdown, upsertBudgetEntry } from "../src/lib/budget.ts"
+import { parseAmount, budgetTotals, isValidDate, entriesForMonth, removeMonthEntries, selectBudgetEntries, monthBreakdown, upsertBudgetEntry } from "../src/lib/budget.ts"
 
 test("accepts Turkish decimal amounts and rejects invalid or ambiguous amounts", () => {
   assert.equal(parseAmount(" 123,45 "), 12345)
@@ -66,7 +66,7 @@ test("category search respects Turkish casing and amount sorting leaves source u
 })
 
 test("savings reduce spendable funds without becoming expenses or counting fixed costs twice", () => {
-  const entries = [recurring, { ...recurring, id: "income", kind: "income", recurrence: undefined, amountCents: 500000 }, { ...recurring, id: "statement", recurrence: undefined, amountCents: 50000 }]
+  const entries = [recurring, { ...recurring, id: "income", kind: "income", recurrence: undefined, amountCents: 500000 }, { ...recurring, id: "expense", recurrence: undefined, amountCents: 50000 }]
   const math = monthBreakdown(entries, 75000)
   assert.equal(math.fixed, 100000)
   assert.equal(math.other, 50000)
@@ -77,17 +77,15 @@ test("savings reduce spendable funds without becoming expenses or counting fixed
   assert.equal(monthBreakdown(entries, 600000).left, -250000)
 })
 
-test("statement updates replace the same month while retaining other months and categories", () => {
-  const entry = { ...recurring, id: "nov", categoryId: "card", recurrence: undefined }
-  const otherMonth = { ...entry, id: "dec", date: "2026-12-01" }
-  const otherCategory = { ...entry, id: "other", categoryId: "other" }
-  const next = upsertBudgetEntry([entry, otherMonth, otherCategory], { ...entry, id: "replacement", amountCents: 20000 }, true)
-  assert.equal(next.length, 3)
-  assert.equal(next.find((item) => item.id === "replacement").amountCents, 20000)
-  assert.ok(next.some((item) => item.id === "dec"))
-  assert.ok(next.some((item) => item.id === "other"))
-  const category = { kind: "statement", startMonth: "2026-10", endMonth: "2026-12" }
-  assert.equal(categoryActive(category, "2026-10"), true)
-  assert.equal(categoryActive(category, "2027-01"), false)
-  assert.equal(categoryActive({ ...category, endMonth: "" }, "2027-01"), true)
+test("transactions sharing a month and category remain independent; edits replace only their ID", () => {
+  const first = { ...recurring, id: "first", categoryId: "card", recurrence: undefined }
+  const second = { ...first, id: "second", amountCents: 20000 }
+  const entries = upsertBudgetEntry([first], second)
+  assert.equal(entries.length, 2)
+  const updated = upsertBudgetEntry(entries, { ...second, amountCents: 30000, categoryId: undefined })
+  assert.equal(updated.length, 2)
+  assert.equal(updated.find((entry) => entry.id === "first").amountCents, first.amountCents)
+  assert.equal(updated.find((entry) => entry.id === "second").amountCents, 30000)
+  assert.equal(updated.find((entry) => entry.id === "second").categoryId, undefined)
+  assert.equal(monthBreakdown(updated, 0).expense, first.amountCents + 30000)
 })

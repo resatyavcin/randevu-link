@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/randevu-linki", destination: "/booking-link", permanent: false },
       { source: "/dashboard/randevu-linki", destination: "/booking-link", permanent: false },
-      { source: "/booking/:slug", destination: "/booking", permanent: false },
+      { source: "/booking", destination: "/profile", permanent: false },
+      { source: "/booking/:slug", destination: "/profile", permanent: false },
     ]
   },
   async headers() {

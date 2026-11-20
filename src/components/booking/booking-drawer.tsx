@@ -56,7 +56,6 @@ export function BookingDrawer({
                 </DrawerTitle>
                 <DrawerDescription className="sr-only">{title}</DrawerDescription>
                 {children}
-                <DrawerPrimitive.Close aria-label="Kapat" className="mt-4 rounded-full border px-4 py-2 text-sm">Kapat</DrawerPrimitive.Close>
               </div>
             </div>
           </DrawerPrimitive.Content>

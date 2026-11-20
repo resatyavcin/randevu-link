@@ -3,7 +3,7 @@
 import { useHydrated } from "@/lib/use-hydrated"
 
 import * as React from "react"
-import { Globe } from "lucide-react"
+import { ArrowUpRight } from "lucide-react"
 import {
   Drawer,
   DrawerContent,
@@ -13,8 +13,6 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
-import { InstagramIcon } from "@/components/ui/instagram-icon"
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon"
 import { cn } from "@/lib/utils"
 import { BUSINESS_INSTAGRAM, BUSINESS_WEBSITE, BUSINESS_WHATSAPP } from "@/lib/config"
 
@@ -317,53 +315,20 @@ function SocialLinkForm({ kind, onOpenChange }: { kind: SocialKind; onOpenChange
   )
 }
 
-export function SocialActions({ className }: { className?: string }) {
-  const { instagram, instagramUrl, whatsapp, whatsappUrl, websiteUrl } =
-    useSocialLinks()
-
-  if (!instagramUrl && !whatsappUrl && !websiteUrl) return null
+export function SocialActions({ className, linkedinUrl }: { className?: string; linkedinUrl?: string }) {
+  if (!linkedinUrl) return null
 
   return (
-    <div
-      className={cn("mt-3 flex flex-wrap items-center justify-center gap-2", className)}
-    >
-      {instagramUrl ? (
-        <a
-          href={instagramUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card px-3 text-[13px] font-semibold ring-1 ring-border/80 transition-colors hover:bg-muted"
-        >
-          <InstagramIcon className="size-3.5" strokeWidth={2.2} />
-          Instagram
-          <span className="sr-only">{`@${instagram}`}</span>
-        </a>
-      ) : null}
-      {whatsappUrl ? (
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card px-3 text-[13px] font-semibold ring-1 ring-border/80 transition-colors hover:bg-muted"
-        >
-          <WhatsAppIcon className="size-3.5 text-[#25D366]" />
-          WhatsApp
-          <span className="sr-only">{formatWhatsapp(whatsapp)}</span>
-        </a>
-      ) : null}
-      {websiteUrl ? (
-        <a
-          href={websiteUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-card px-3 text-[13px] font-semibold ring-1 ring-border/80 transition-colors hover:bg-muted"
-        >
-          <Globe className="size-3.5" strokeWidth={2.2} />
-          Web
-          <span className="sr-only">{websiteLabel(websiteUrl)}</span>
-        </a>
-      ) : null}
+    <div className={cn("mt-3 flex items-center justify-center", className)}>
+      <a
+        href={linkedinUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#0A66C2] px-3 text-[13px] font-semibold text-white transition-colors hover:bg-[#004182]"
+      >
+        LinkedIn
+        <ArrowUpRight aria-hidden="true" className="size-3.5" />
+      </a>
     </div>
   )
 }
-

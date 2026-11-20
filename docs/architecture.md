@@ -11,9 +11,16 @@ public/
   fonts/         Yerel yazı tipleri ve OFL lisansları
 ```
 
-`/booking` işletme profilini ve üç işlem düğmesini gösterir. Düğmeler yalnızca
-başlık ve kapatma düğmesi içeren bir drawer açar. Randevu oluşturma, seans,
-iptal akışı, örnek yorumlar ve demo veri kaynağı yoktur.
+`/profile` profil kapağı ve avatarını korur. İsmin altında Yazılım Mühendisi,
+CV indirme alanı ve şirket deneyim listesi gösterir. `PublicBookingContent`
+CV bağlantısını ve deneyimleri props ile alır. CV verilmezse indirme düğmesi
+pasiftir; deneyim verilmezse boş durum gösterilir. Şirket seçimi yapılan işler
+ve teknolojileri drawer içinde açar. Ortak deneyim tipi `types/career.ts`,
+arayüz `components/profile/career-profile.tsx` içindedir. Profil sahibinin sağladığı
+TOM, ID3 ve Vodafone deneyimleri `lib/career.ts` içinde tanımlıdır. TOM içindeki
+üç pozisyon tek şirket drawer’ında listelenir. İş açıklaması verilmeyen rollere
+ek içerik üretilmez. Randevu butonları
+bu sayfada gösterilmez; mevcut randevu bileşenleri korunur.
 
 `/booking-link` profil ve görünüm ayarlarını içerir. Tercihler doğrudan tarayıcıda
 saklanır; sorgu önbelleği veya servis katmanı kullanılmaz. Menü dört sayfayı açar.
@@ -51,15 +58,19 @@ işlem listesi de burada denenebilir. Örnek bütçe içerikleri yalnızca öniz
 Önizlemeler kayıt oluşturmaz.
 `components/layout/panel-shell.tsx` ortak menü ve sayfa çerçevesidir. Kapak ve
 avatar varsayılan olarak kapalıdır; yalnızca `/booking-link` bu çerçevede
-`businessHeader` seçeneğini açar. `/booking` kendi profil başlığını kullanır.
+`businessHeader` seçeneğini açar. `/profile` kendi profil başlığını kullanır.
 Bütçe, arayüz ve bulunamadı sayfaları sade menü başlığıyla açılır.
 
-Bütçede kategori ve ekstre tanımları ile ay bazında birikim tercihleri ayrı bir
-sürüm anahtarıyla `data/budget.ts` üzerinden saklanır. Eski işlem kayıtları
-kategori olmadan okunmaya devam eder. Ekstre tutarını güncellemek aynı ayın
-kaydını değiştirir; ikinci kez gidere eklemez. Sabit kayıtlarda bitiş ayı boş
-bırakılabilir ve ad, tutar, aralık düzenlenebilir. Düzenleme tüm geçerli aylara
-uygulanır. Arama, kategori filtresi, tarih/tutar sıralaması ve günlük gruplama
-aylık toplamları değiştirmez. Birikim tutarı gider oluşturmaz; harcanabilir
-bakiyeden ayrılır. Ay dökümü hesap kalemlerini gösterir. Silme yalnızca mevcut
-seçim ve metin onayıyla yapılır; Sarraf'ın kaydırarak silme akışı kullanılmaz.
+Bütçede kategoriler isteğe bağlıdır. Kategori adı dışında ayrı tür veya tarih
+aralığı tutulmaz. Tüm gelir ve giderler işlem hareketlerinden eklenir; aynı ay
+ve kategoride birden fazla bağımsız işlem olabilir. Eski kategori tanımları
+kimlikleri korunarak okunur; mevcut işlemler ve kategori bağlantıları korunur.
+Kategori ve ay bazında birikim tercihleri `data/budget.ts` üzerinden saklanır.
+Sabit kayıtlarda bitiş ayı boş bırakılabilir ve ad, tutar, aralık düzenlenebilir.
+Düzenleme tüm geçerli aylara uygulanır. Arama, kategori filtresi ve tutar
+sıralaması aylık toplamları değiştirmez. Birikim tutarı gider oluşturmaz;
+harcanabilir bakiyeden ayrılır. Ay dökümü gelir, sabit gider, diğer gider ve
+birikimi fiş düzeninde bir modalda gösterir. Silme yalnızca mevcut seçim ve
+metin onayıyla yapılır.
+
+Eski `/booking` ve `/booking/:slug` adresleri `/profile` adresine yönlenir. Kapak 4:1 oranını tüm ekran genişliklerinde korur.

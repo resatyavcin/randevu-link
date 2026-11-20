@@ -15,5 +15,5 @@ export async function cropImage(source: string, area: CropArea, maxWidth: number
   return canvas.toDataURL(transparent ? "image/png" : "image/jpeg", 0.82)
 }
 
-export const COVER_ASPECT = 3
+export const COVER_ASPECT = 4
 export const MAX_COVERS = 5

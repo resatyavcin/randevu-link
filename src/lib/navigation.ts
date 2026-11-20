@@ -1,7 +1,7 @@
 import { BUSINESS_MAPS_DESTINATION as defaultMapsDestination } from "@/lib/config"
 
 export function getBookingPath() {
-  return "/booking";
+  return "/profile";
 }
 
 export function getBookingUrl() {

@@ -23,7 +23,7 @@ export function DashboardTopbar({ onMenuClick }: { onMenuClick: () => void }) {
           <CoverBanner className="rounded-3xl" />
           <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2">
             <button type="button" onClick={onMenuClick} aria-label="Panel menüsünü aç" className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-white/90 text-black shadow-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"><Menu className="size-4" strokeWidth={1.6} /></button>
-            <Link href="/booking" className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-white/90 px-3 text-xs font-medium text-black shadow-sm">Randevu sayfam <ArrowUpRight className="size-3.5" /></Link>
+            <Link href="/profile" className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-white/90 px-3 text-xs font-medium text-black shadow-sm">Profilim <ArrowUpRight className="size-3.5" /></Link>
           </div>
           <UserAvatar src={logoSrc ?? BUSINESS.avatar} alt={BUSINESS_NAME} className="absolute -bottom-7 left-1/2 size-20 -translate-x-1/2 border-4 border-background" />
         </div>

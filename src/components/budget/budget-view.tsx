@@ -12,7 +12,7 @@ import { BudgetCategoryField, BudgetCategoryManager, BudgetSummary } from "@/com
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/booking-link/panel-sheet"
 import { readBudget, readBudgetPreferences, saveBudget, saveBudgetPreferences } from "@/data/budget"
-import { budgetTotals, categoryActive, entriesForMonth, formatMoney, isValidDate, isValidMonth, parseAmount, removeMonthEntries, upsertBudgetEntry, todayLocal } from "@/lib/budget"
+import { budgetTotals, entriesForMonth, formatMoney, isValidDate, isValidMonth, parseAmount, removeMonthEntries, upsertBudgetEntry, todayLocal } from "@/lib/budget"
 import { useHydrated } from "@/lib/use-hydrated"
 import { cn } from "@/lib/utils"
 import type { BudgetEntry, BudgetPreferences } from "@/types/budget"
@@ -33,7 +33,6 @@ export function BudgetView() {
   const preferences = updatedPreferences ?? initial.preferences
   const [editingId, setEditingId] = useState<string | null>(null)
   const [categoryId, setCategoryId] = useState("")
-  const [statementId, setStatementId] = useState<string | null>(null)
   const [fixedOpen, setFixedOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [filter, setFilter] = useState("")
@@ -61,10 +60,6 @@ export function BudgetView() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [confirmation, setConfirmation] = useState("")
   const monthlyEntries = entriesForMonth(entries, month, currentMonth)
-  const pendingStatements = preferences.categories.filter((category) =>
-    category.kind === "statement" && categoryActive(category, month) &&
-    !monthlyEntries.some((entry) => entry.categoryId === category.id)
-  )
   const latestMonth = entries.filter((entry) => !entry.recurrence).map((entry) => entry.date.slice(0, 7)).sort().at(-1)
   const selectedIds = selected.filter((id) => monthlyEntries.some((entry) => entry.id === id && !entry.recurrence))
   const totals = budgetTotals(monthlyEntries)
@@ -82,7 +77,6 @@ export function BudgetView() {
   function openEntry(isRecurring: boolean) {
     setEditingId(null)
     setCategoryId("")
-    setStatementId(null)
     setRecurring(isRecurring)
     setStartMonth(month)
     setEndMonth("")
@@ -95,17 +89,9 @@ export function BudgetView() {
   }
 
   function editEntry(entry: BudgetEntry) {
-    setEditingId(entry.id); setRecurring(Boolean(entry.recurrence)); setStatementId(null)
+    setEditingId(entry.id); setRecurring(Boolean(entry.recurrence))
     setKind(entry.kind); setDescription(entry.description); setAmount(String(entry.amountCents / 100).replace(".", ","))
     setDate(entry.date); setStartMonth(entry.date.slice(0, 7)); setEndMonth(entry.recurrence?.endMonth ?? ""); setCategoryId(entry.categoryId ?? ""); setError(""); setOpen(true)
-  }
-
-  function openStatement(id: string) {
-    const existing = monthlyEntries.find((entry) => entry.categoryId === id)
-    if (existing) editEntry(existing)
-    else openEntry(false)
-    setStatementId(id); setCategoryId(id); setKind("expense"); setDate(`${month}-01`)
-    if (!existing) setDescription(preferences.categories.find((category) => category.id === id)?.name ?? "Ekstre")
   }
 
   function addEntry(event: FormEvent<HTMLFormElement>) {
@@ -120,7 +106,7 @@ export function BudgetView() {
       const current = readBudget()
       const previous = current.find((entry) => entry.id === editingId)
       const nextEntry: BudgetEntry = { id: editingId ?? crypto.randomUUID(), kind, description: description.trim(), amountCents, date: entryDate, createdAt: previous?.createdAt ?? new Date().toISOString(), ...(categoryId ? { categoryId } : {}), ...(recurring ? { recurrence: { endMonth, excludedMonths: previous?.recurrence?.excludedMonths ?? [] } } : {}) }
-      const next = upsertBudgetEntry(current, nextEntry, Boolean(statementId))
+      const next = upsertBudgetEntry(current, nextEntry)
       saveBudget(next)
       setUpdated(next)
       setMonth(recurring ? (startMonth > currentMonth ? currentMonth : startMonth) : date.slice(0, 7))
@@ -163,7 +149,7 @@ export function BudgetView() {
       <BudgetSummary entries={monthlyEntries} preferences={preferences} month={month} onSave={commitPreferences} disabled={!hydrated || Boolean(initial.error)} />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-2"><BudgetCategoryManager categories={preferences.categories} month={month} disabled={!hydrated || Boolean(initial.error)} onSave={(categories) => commitPreferences({ ...preferences, categories })} /></div>
+        <div className="flex flex-wrap gap-2"><BudgetCategoryManager categories={preferences.categories} disabled={!hydrated || Boolean(initial.error)} onSave={(categories) => commitPreferences({ ...preferences, categories })} /></div>
       </div>
 
       <BudgetTransactions
@@ -180,11 +166,7 @@ export function BudgetView() {
           setSelected([])
         }}
         onSelect={(id, checked) => setSelected((ids) => checked ? [...ids, id] : ids.filter((item) => item !== id))}
-        onEdit={(entry) => {
-          const category = preferences.categories.find((item) => item.id === entry.categoryId)
-          if (category?.kind === "statement") openStatement(category.id)
-          else editEntry(entries.find((item) => item.id === entry.id) ?? entry)
-        }}
+        onEdit={(entry) => editEntry(entries.find((item) => item.id === entry.id) ?? entry)}
         loading={!hydrated}
         error={initial.error}
         onLatestMonth={latestMonth && latestMonth !== month ? () => goToMonth(latestMonth) : undefined}
@@ -239,38 +221,26 @@ export function BudgetView() {
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
-          <SheetHeader><SheetTitle>{statementId ? "Ekstre tutarı" : editingId ? "İşlemi düzenle" : recurring ? "Sabit işlem ekle" : "İşlem ekle"}</SheetTitle><SheetDescription>{recurring ? "Belirlediğin aylar boyunca her ay otomatik yansır." : "Gelir veya giderini kaydet."}</SheetDescription></SheetHeader>
-          {!editingId && !recurring && !statementId && pendingStatements.length > 0 && (
-            <section className="mb-5 space-y-2" aria-labelledby="pending-statements">
-              <h3 id="pending-statements" className="text-sm font-semibold">Tutar bekleyen ekstreler · {monthLabel}</h3>
-              {month > currentMonth && <p className="text-xs text-muted-foreground">Tutarlar ilgili ay geldiğinde girilebilir.</p>}
-              {pendingStatements.map((category) => (
-                <Button key={category.id} type="button" variant="outline" disabled={month > currentMonth} className="h-auto w-full justify-between gap-3 py-3" onClick={() => openStatement(category.id)}>
-                  <span className="min-w-0 whitespace-normal break-words text-left">{category.name}</span>
-                  <span className="shrink-0">Tutar gir</span>
-                </Button>
-              ))}
-            </section>
-          )}
+          <SheetHeader><SheetTitle>{editingId ? "İşlemi düzenle" : recurring ? "Sabit işlem ekle" : "İşlem ekle"}</SheetTitle><SheetDescription>{recurring ? "Belirlediğin aylar boyunca her ay otomatik yansır." : "Gelir veya giderini kaydet."}</SheetDescription></SheetHeader>
           {editingId && recurring && <p className="mb-5 rounded-xl bg-muted/40 p-3 text-sm text-muted-foreground">Sabit kayıttaki değişiklikler, geçerli olduğu tüm aylara uygulanır.</p>}
           <form onSubmit={addEntry} className="space-y-5">
 
-            {!statementId && <div role="group" aria-label="İşlem türü" className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1">{(["income", "expense"] as const).map((value) => <button key={value} type="button" aria-pressed={kind === value} onClick={() => setKind(value)} className={cn("rounded-full py-2.5 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring", kind === value && "bg-background shadow-sm")}>{value === "income" ? "Gelir" : "Gider"}</button>)}</div>}
+            <div role="group" aria-label="İşlem türü" className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1">{(["income", "expense"] as const).map((value) => <button key={value} type="button" aria-pressed={kind === value} onClick={() => setKind(value)} className={cn("rounded-full py-2.5 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring", kind === value && "bg-background shadow-sm")}>{value === "income" ? "Gelir" : "Gider"}</button>)}</div>
             <label className="grid gap-2 text-sm font-medium">Tutar (₺)
               <input required inputMode="decimal" placeholder="0,00" value={amount} onChange={(event) => setAmount(event.target.value)} className={inputClass} />
             </label>
             <label className="grid gap-2 text-sm font-medium">Açıklama<input required maxLength={160} placeholder="Örn. kira, malzeme, ödeme" value={description} onChange={(event) => setDescription(event.target.value)} className={inputClass} /></label>
-            {recurring && preferences.categories.some((category) => category.kind === "custom") && <BudgetCategoryField categories={preferences.categories} value={categoryId} onChange={setCategoryId} />}
+            {recurring && preferences.categories.length > 0 && <BudgetCategoryField categories={preferences.categories} value={categoryId} onChange={setCategoryId} />}
             {recurring ? <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <BudgetDateField label="Başlangıç ayı" value={startMonth} onChange={setStartMonth} monthOnly />
                 <BudgetDateField label="Bitiş ayı" value={endMonth} onChange={setEndMonth} monthOnly min={startMonth} optional />
               </div>
               <p className="text-xs leading-relaxed text-muted-foreground">Başlangıç ve bitiş ayı dahil her ay otomatik yansır. Bitişi boş bırakırsan devam eder. Gelecek aylara ait tutarlar, o ay gelene kadar hareketlere ve toplamlara eklenmez.</p>
-            </div> : !statementId && (
+            </div> : (
               <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                 <BudgetDateField label="Tarih" value={date} onChange={setDate} />
-                {preferences.categories.some((category) => category.kind === "custom") && (
+                {preferences.categories.length > 0 && (
                   <BudgetCategoryField categories={preferences.categories} value={categoryId} onChange={setCategoryId} />
                 )}
               </div>

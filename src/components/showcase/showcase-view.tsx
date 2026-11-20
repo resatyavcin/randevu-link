@@ -52,8 +52,8 @@ function PreviewSection({ number, title, description, children }: {
 }
 
 const previewCategories: BudgetCategory[] = [
-  { id: "services", name: "Hizmet geliri", kind: "custom", startMonth: "", endMonth: "" },
-  { id: "supplies", name: "Malzeme", kind: "custom", startMonth: "", endMonth: "" },
+  { id: "services", name: "Hizmet geliri" },
+  { id: "supplies", name: "Malzeme" },
 ]
 const previewEntries: BudgetEntry[] = [
   { id: "preview-income", kind: "income", description: "Örnek hizmet geliri", amountCents: 150000, date: "2026-11-14", categoryId: "services", createdAt: "2026-11-14T12:00:00Z" },

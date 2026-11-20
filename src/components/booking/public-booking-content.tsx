@@ -1,17 +1,17 @@
 "use client"
 
-import { DirectionsButton } from "@/components/ui/directions-button"
-import { BookingActions } from "@/components/booking/booking-actions"
+import { CareerHeading } from "@/components/profile/career-profile"
 import { ProfileHero } from "@/components/profile/profile-hero"
-import { SocialActions } from "@/components/profile/social-links"
 import { cn } from "@/lib/utils"
 import { SiteFooter } from "@/components/layout/site-footer"
 
 export function PublicBookingContent({
   className,
   compact = false,
+  cvUrl = "/cv.txt",
 }: {
   className?: string
+  cvUrl?: string
   /** Slightly tighter spacing for drawer embedding */
   compact?: boolean
 }) {
@@ -21,20 +21,9 @@ export function PublicBookingContent({
         <ProfileHero
           compact={compact}
           heading="h1"
-          actions={
-            <DirectionsButton
-              className={
-                compact
-                  ? "absolute top-3 right-7 z-20"
-                  : "absolute top-6 right-7 z-20"
-              }
-            />
-          }
-          afterName={<SocialActions />}
+          afterName={<CareerHeading title="Yazılım Mühendisi" cvUrl={cvUrl} linkedinUrl="https://www.linkedin.com/in/resatyavcin/" />}
         />
       </div>
-
-      <BookingActions />
 
       <SiteFooter />
     </div>

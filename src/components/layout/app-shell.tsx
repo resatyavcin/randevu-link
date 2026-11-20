@@ -6,8 +6,8 @@ import { BookingThemeScope } from "@/components/booking/booking-appearance"
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const publicSurface = pathname === "/booking"
-  const bookingSurface = pathname === "/booking"
+  const publicSurface = pathname === "/profile"
+  const bookingSurface = pathname === "/profile"
 
   useLayoutEffect(() => {
     document.documentElement.classList.toggle("font-dashboard", !publicSurface)

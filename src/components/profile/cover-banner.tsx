@@ -23,7 +23,7 @@ export function CoverBanner({ className }: { className?: string }) {
 
 
   return (
-    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false) }} data-cover-banner="" className={cn("relative h-32 w-full overflow-hidden bg-muted sm:h-40", className)} role={photos.length > 1 ? "region" : undefined} aria-label={photos.length > 1 ? "İşletme kapak görselleri" : undefined}>
+    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false) }} data-cover-banner="" className={cn("relative aspect-[4/1] w-full overflow-hidden bg-muted", className)} role={photos.length > 1 ? "region" : undefined} aria-label={photos.length > 1 ? "İşletme kapak görselleri" : undefined}>
       <Image src={photos[index]} alt={`${BUSINESS.companyName} kapak görseli ${index + 1}`} fill unoptimized sizes="(max-width: 834px) 100vw, 834px" className={headerImages.length ? "object-cover object-center" : "object-cover object-[center_45%]"} />
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
     </div>

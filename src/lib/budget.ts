@@ -18,7 +18,7 @@ export function budgetTotals(entries: BudgetEntry[]) {
   return { income, expense, balance: income - expense }
 }
 
-export const formatMoney = (cents: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(cents / 100)
+export const formatMoney = (cents: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(cents === 0 ? 0 : cents / 100)
 
 export function todayLocal() {
   const now = new Date()
@@ -46,10 +46,6 @@ export function removeMonthEntries(entries: BudgetEntry[], ids: string[], month:
   })
 }
 
-export function categoryActive(category: BudgetCategory, month: string) {
-  return category.kind === "custom" || (category.startMonth <= month && (!category.endMonth || month <= category.endMonth))
-}
-
 export function selectBudgetEntries(entries: BudgetEntry[], categories: BudgetCategory[], query: string, categoryId: string, sort: "date" | "amount") {
   const term = query.trim().toLocaleLowerCase("tr-TR")
   const names = new Map(categories.map((category) => [category.id, category.name]))
@@ -63,7 +59,7 @@ export function monthBreakdown(entries: BudgetEntry[], savings: number) {
   return { ...totals, fixed, other: totals.expense - fixed, savings, spendable: totals.income - fixed - savings, left: totals.balance - savings }
 }
 
-export function upsertBudgetEntry(entries: BudgetEntry[], entry: BudgetEntry, statement = false): BudgetEntry[] {
-  return [entry, ...entries.filter((item) => item.id !== entry.id && !(statement && item.categoryId === entry.categoryId && item.date.slice(0, 7) === entry.date.slice(0, 7))) ]
+export function upsertBudgetEntry(entries: BudgetEntry[], entry: BudgetEntry): BudgetEntry[] {
+  return [entry, ...entries.filter((item) => item.id !== entry.id) ]
     .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
 }

@@ -12,7 +12,7 @@ export function BookingView({
   const router = useRouter()
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background pt-3">
+    <div className="flex min-h-full flex-col bg-background pt-3">
       {preview ? (
         <div className="flex items-center gap-2 px-4 pt-3">
           <button

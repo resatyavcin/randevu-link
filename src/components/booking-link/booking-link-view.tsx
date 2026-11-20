@@ -119,13 +119,13 @@ export function BookingLinkView() {
 
         <section className="overflow-hidden rounded-2xl border bg-card [&>[data-slot=detail-row]]:h-[72px]">
           <header className="divider-dashed bg-muted/50 px-4 py-3">
-            <h2 className="text-sm font-semibold">Randevu sayfası görünümü</h2>
+            <h2 className="text-sm font-semibold">Profil sayfası görünümü</h2>
             <p className="text-xs text-muted-foreground">
               Müşterilerinizin gördüğü sayfayı kişiselleştirin
             </p>
           </header>
           <DetailRow
-            label="Randevu sayfası koyu tema"
+            label="Profil sayfası koyu tema"
             trailing={
               <Switch
                 size="md"

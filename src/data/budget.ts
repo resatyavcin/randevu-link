@@ -64,15 +64,7 @@ export function readBudgetPreferences(): BudgetPreferences {
         category &&
         typeof category.id === "string" &&
         typeof category.name === "string" &&
-        category.name.trim() &&
-        ["custom", "statement"].includes(String(category.kind)) &&
-        typeof category.startMonth === "string" &&
-        (category.startMonth === "" || isValidMonth(category.startMonth)) &&
-        typeof category.endMonth === "string" &&
-        (category.endMonth === "" ||
-          (isValidMonth(category.endMonth) &&
-            category.endMonth >= category.startMonth)) &&
-        (category.kind !== "statement" || isValidMonth(category.startMonth)),
+        category.name.trim(),
     ) ||
     !value.savings ||
     typeof value.savings !== "object" ||
@@ -86,7 +78,8 @@ export function readBudgetPreferences(): BudgetPreferences {
   ) {
     throw new Error("Bütçe ayarları okunamadı");
   }
-  return value;
+  // Keep IDs so existing transactions retain their optional category links.
+  return { categories: value.categories.map(({ id, name }: { id: string; name: string }) => ({ id, name })), savings: value.savings };
 }
 
 export function saveBudgetPreferences(value: BudgetPreferences) {
