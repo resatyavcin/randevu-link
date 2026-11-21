@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Tooltip } from "radix-ui"
-import { ArrowUpRight, BriefcaseBusiness, ChevronRight, Download, MapPin } from "lucide-react"
+import { ArrowUpRight, BriefcaseBusiness, ChevronRight, Download, Mail, MapPin } from "lucide-react"
 import { BookingDrawer } from "@/components/booking/booking-drawer"
 import { ServiceCategory } from "@/components/booking/service-picker"
 import { Button } from "@/components/ui/button"
@@ -83,11 +83,12 @@ function CvDownload({ url }: { url?: string }) {
   </Tooltip.Provider>
 }
 
-export function CareerHeading({ title, cvUrl, linkedinUrl }: { title: string; cvUrl?: string; linkedinUrl?: string }) {
+export function CareerHeading({ title, cvUrl, linkedinUrl, email }: { title: string; cvUrl?: string; linkedinUrl?: string; email?: string }) {
   return <div className="mb-2 flex flex-col items-center gap-3">
     <p className="text-sm font-medium text-muted-foreground">{title}</p>
-    <div className="flex items-center justify-center gap-2">
+    <div className="flex flex-wrap items-center justify-center gap-2">
       <CvDownload url={cvUrl} />
+      {email && <Button asChild variant="outline" className="h-9 rounded-full"><a href={`mailto:${email}`} aria-label={`${email} adresine e-posta gönder`}><Mail aria-hidden="true" className="size-4" />E-posta</a></Button>}
       {linkedinUrl && <Button asChild className="h-9 rounded-full bg-[#0A66C2] text-white hover:bg-[#004182]"><a href={linkedinUrl} target="_blank" rel="noopener noreferrer">LinkedIn<ArrowUpRight aria-hidden="true" className="size-3.5" /></a></Button>}
     </div>
   </div>

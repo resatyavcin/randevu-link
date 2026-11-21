@@ -4,7 +4,6 @@ import { useHydrated } from "@/lib/use-hydrated"
 
 import * as React from "react"
 import { Slot } from "radix-ui"
-import { showUndoToast } from "@/lib/undo-toast"
 import { cn } from "@/lib/utils"
 
 export type BookingAppearance = {
@@ -150,7 +149,6 @@ export function BookingAppearanceProvider({
   const setDark = React.useCallback((dark: boolean) => {
     applyDark(dark)
     setPatch(prev => ({ ...prev, dark }))
-    showUndoToast(dark ? "Koyu randevu teması uygulandı" : "Açık randevu teması uygulandı")
   }, [])
 
   const value = React.useMemo<BookingAppearanceContextValue>(

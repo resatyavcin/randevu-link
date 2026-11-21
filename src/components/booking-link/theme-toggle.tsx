@@ -3,10 +3,17 @@
 import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "@/components/providers/theme-provider"
+import { useBookingAppearance } from "@/components/booking/booking-appearance"
 import { cn } from "@/lib/utils"
 
-export function DashboardThemeToggle({ compact = false }: { compact?: boolean }) {
-  const { theme, setTheme } = useTheme()
+export function DashboardThemeToggle({ compact = false, className, scope = "panel" }: { compact?: boolean; className?: string; scope?: "panel" | "booking" }) {
+  const panel = useTheme()
+  const booking = useBookingAppearance()
+  const theme = scope === "booking" ? (booking.dark ? "dark" : "light") : panel.theme
+  const setTheme = (value: "light" | "dark") => {
+    if (scope === "booking") booking.setDark(value === "dark")
+    else panel.setTheme(value)
+  }
   const mounted = React.useSyncExternalStore(
     () => () => {},
     () => true,
@@ -15,7 +22,7 @@ export function DashboardThemeToggle({ compact = false }: { compact?: boolean })
 
   if (!mounted) {
     return compact ? (
-      <div className="size-8" aria-hidden />
+      <div className={cn("size-8", className)} aria-hidden />
     ) : (
       <div
         className="grid h-11 grid-cols-2 rounded-xl bg-muted/60 p-1"
@@ -31,10 +38,11 @@ export function DashboardThemeToggle({ compact = false }: { compact?: boolean })
       <button
         type="button"
         onClick={() => setTheme(isDark ? "light" : "dark")}
-        className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+        className={cn("inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", className)}
         aria-label={isDark ? "Açık temaya geç" : "Koyu temaya geç"}
+        title={isDark ? "Açık temaya geç" : "Koyu temaya geç"}
       >
-        {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        {isDark ? <Sun aria-hidden className="size-4" /> : <Moon aria-hidden className="size-4" />}
       </button>
     )
   }
